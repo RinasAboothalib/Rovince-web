@@ -9,11 +9,11 @@ import { PRODUCTS } from "@/lib/products";
 
 export default function LineupWheel() {
   const [active, setActive] = useState(0);
-  const p = PRODUCTS[active];
+  const activeProduct = PRODUCTS[active] ?? PRODUCTS[0];
   const stageRef = useRef<HTMLDivElement>(null);
 
   /* 3D tilt — pointer position drives rotateX/rotateY on the tire */
-  const onMove = (e: React.MouseEvent) => {
+  const onMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = stageRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
@@ -24,11 +24,13 @@ export default function LineupWheel() {
     el.style.setProperty("--mx", `${((x + 0.5) * 100).toFixed(1)}%`);
     el.style.setProperty("--my", `${((y + 0.5) * 100).toFixed(1)}%`);
   };
-  const onLeave = () => {
+  const resetTilt = () => {
     const el = stageRef.current;
     if (!el) return;
     el.style.setProperty("--rx", "0deg");
     el.style.setProperty("--ry", "0deg");
+    el.style.setProperty("--mx", "50%");
+    el.style.setProperty("--my", "50%");
   };
 
   return (
@@ -50,18 +52,23 @@ export default function LineupWheel() {
           <div
             ref={stageRef}
             className="lineup-stage"
-            onMouseMove={onMove}
-            onMouseLeave={onLeave}
+            onPointerMove={onMove}
+            onPointerLeave={resetTilt}
+            onPointerCancel={resetTilt}
           >
             <div className="stage-glow" aria-hidden />
             <div className="stage-tilt">
-              <img key={p.img} src={p.img} alt={`${p.name} — ${p.sub}`} />
+              <img
+                key={activeProduct.img}
+                src={activeProduct.img}
+                alt={`${activeProduct.name} — ${activeProduct.sub}`}
+              />
               <div className="stage-sheen" aria-hidden />
             </div>
             <div className="stage-shadow" aria-hidden />
             <div className="stage-badge">
               <span className="dot" aria-hidden />
-              {p.sub}
+              {activeProduct.sub}
             </div>
           </div>
 
@@ -95,8 +102,8 @@ export default function LineupWheel() {
               </button>
             ))}
 
-            <Link href={p.href} className="btn btn-ghost lineup-cta">
-              View {p.name} →
+            <Link href={activeProduct.href} className="btn btn-ghost lineup-cta">
+              View {activeProduct.name} →
             </Link>
           </div>
         </Reveal>
