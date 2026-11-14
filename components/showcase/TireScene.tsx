@@ -1,9 +1,9 @@
 "use client";
-/* Procedural 3D tire — built from real geometry (torus body, instanced tread
-   blocks, canvas-textured sidewall lettering, metallic rim assembly).
-   Drag = 360° orbit, wheel/pinch = zoom, idle = auto-rotate, plus hotspots. */
+/* Premium static product display — the tire stays fixed and solid, with only
+   subtle idle motion. Raycaster hover inspection: hovering a component
+   smoothly zooms the camera into it, highlights it, and shows a label. */
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Float, Html, OrbitControls } from "@react-three/drei";
+import { ContactShadows, Html, OrbitControls } from "@react-three/drei";
 import {
   useEffect,
   useLayoutEffect,
@@ -14,6 +14,53 @@ import {
 } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
+
+/* ------------------------------------------------------------------ */
+/* Part definitions                                                    */
+/* ------------------------------------------------------------------ */
+export type PartKey = "tread" | "sidewall" | "rim" | "shoulder";
+
+export const PART_INFO: Record<
+  PartKey,
+  { label: string; title: string; lines: string[]; anchor: [number, number, number] }
+> = {
+  tread: {
+    label: "Advanced Tread Design",
+    title: "Advanced Tread Design",
+    lines: [
+      "Deep, self-aligning tread blocks for even wear across the full contact patch.",
+      "72-block layout tuned for forklift & port duty cycles.",
+    ],
+    anchor: [1.42, 0.12, 0],
+  },
+  sidewall: {
+    label: "Reinforced Sidewall",
+    title: "Reinforced Sidewall",
+    lines: [
+      "Embossed brand markings — ROVINCE · ZERO DOWNTIME · RS-500.",
+      "Three-stage solid construction, no air and no punctures.",
+    ],
+    anchor: [-1.02, 0.78, 0.4],
+  },
+  rim: {
+    label: "Heavy-Duty Construction",
+    title: "Heavy-Duty Construction",
+    lines: [
+      "Steel rim assembly rated for the full 5,000 kg load index.",
+      "Six-bolt press-on fitment for industrial handling equipment.",
+    ],
+    anchor: [0, 0.55, 0.35],
+  },
+  shoulder: {
+    label: "Enhanced Grip",
+    title: "Enhanced Grip",
+    lines: [
+      "Reinforced shoulder blocks resist chunking under cornering loads.",
+      "Stable traction on wet and oily yard surfaces.",
+    ],
+    anchor: [1.02, 1.02, 0.32],
+  },
+};
 
 /* ------------------------------------------------------------------ */
 /* Sidewall lettering texture — drawn on a canvas ring, fully offline   */
@@ -57,11 +104,20 @@ function makeSidewallTexture() {
 }
 
 /* ------------------------------------------------------------------ */
-/* The tire model                                                      */
+/* The tire model — fixed, solid display position                      */
 /* ------------------------------------------------------------------ */
-function TireModel({ scrollRef }: { scrollRef: RefObject<{ v: number }> }) {
+const HOME_POS = new THREE.Vector3(0, 0.55, 5.4);
+const HOME_TARGET = new THREE.Vector3(0, 0, 0);
+
+function TireModel({
+  hovered,
+  setHovered,
+}: {
+  hovered: PartKey | null;
+  setHovered: (p: PartKey | null) => void;
+}) {
   const group = useRef<THREE.Group>(null);
-  const intro = useRef({ t: 0, rot: 0 });
+  const intro = useRef({ t: 0, rot: 0.35 });
   const sidewall = useMemo(() => makeSidewallTexture(), []);
 
   /* instanced tread blocks around the circumference */
@@ -89,18 +145,36 @@ function TireModel({ scrollRef }: { scrollRef: RefObject<{ v: number }> }) {
   }, [tread]);
 
   useEffect(() => {
-    /* cinematic entrance */
     gsap.to(intro.current, { t: 1, duration: 2.4, ease: "power3.out" });
     return () => sidewall.dispose();
   }, [sidewall]);
 
+  /* classify a local hit point into a component region (tire axis = Z) */
+  const classify = (local: THREE.Vector3): PartKey | null => {
+    const r = Math.hypot(local.x, local.y);
+    const az = Math.abs(local.z);
+    if (r < 0.74) return "rim";
+    if (r < 1.16) return "sidewall";
+    return az > 0.3 ? "shoulder" : "tread";
+  };
+
+  const onMove = (e: any) => {
+    e.stopPropagation();
+    const local = group.current
+      ? group.current.worldToLocal(e.point.clone())
+      : e.point;
+    const part = classify(local);
+    setHovered(part);
+  };
+
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    /* scroll-driven slow yaw */
     if (group.current) {
+      /* entrance settles into a fixed pose, then only ±1° breathing */
       const i = intro.current.t;
-      group.current.rotation.y = -2.4 * (1 - i) + (scrollRef.current?.v ?? 0) * Math.PI * 0.6;
-      group.current.rotation.x = Math.sin(t * 0.4) * 0.02 - 0.04 * (1 - i);
+      group.current.rotation.y = 0.35 * (1 - i) + Math.sin(t * 0.22) * 0.02;
+      group.current.rotation.x = Math.sin(t * 0.15) * 0.008;
+      group.current.position.y = Math.sin(t * 0.5) * 0.02; // extremely subtle
     }
   });
 
@@ -109,16 +183,26 @@ function TireModel({ scrollRef }: { scrollRef: RefObject<{ v: number }> }) {
   );
 
   return (
-    <group ref={group} rotation={[0, -2.4, 0]}>
-      {/* carcass */}
-      <mesh>
+    <group ref={group} rotation={[0, 0.35, 0]}>
+      {/* raycast catcher = the visible tire surfaces */}
+      <mesh onPointerMove={onMove} onPointerOut={() => setHovered(null)}>
         <torusGeometry args={[1, 0.42, 64, 128]} />
         {rubber}
       </mesh>
 
-      {/* instanced tread blocks */}
-      <instancedMesh ref={instRef} args={[tread.geo, undefined, 72]}>
-        <meshStandardMaterial color="#232323" roughness={0.95} metalness={0.04} />
+      <instancedMesh
+        ref={instRef}
+        args={[tread.geo, undefined, 72]}
+        onPointerMove={onMove}
+        onPointerOut={() => setHovered(null)}
+      >
+        <meshStandardMaterial
+          color="#232323"
+          roughness={0.95}
+          metalness={0.04}
+          emissive="#ff7a1a"
+          emissiveIntensity={hovered === "tread" ? 0.12 : 0}
+        />
       </instancedMesh>
 
       {/* circumferential grooves */}
@@ -128,20 +212,28 @@ function TireModel({ scrollRef }: { scrollRef: RefObject<{ v: number }> }) {
           <meshStandardMaterial color="#0b0b0b" roughness={1} />
         </mesh>
       ))}
-      <mesh rotation={[0, 0, 0]}>
+      <mesh>
         <torusGeometry args={[1.34, 0.03, 8, 96]} />
         <meshStandardMaterial color="#0b0b0b" roughness={1} />
       </mesh>
 
       {/* sidewall lettering rings (front & back) */}
       {[0.435, -0.435].map((z) => (
-        <mesh key={z} position={[0, 0, z]} rotation={[0, z < 0 ? Math.PI : 0, 0]}>
+        <mesh
+          key={z}
+          position={[0, 0, z]}
+          rotation={[0, z < 0 ? Math.PI : 0, 0]}
+          onPointerMove={onMove}
+          onPointerOut={() => setHovered(null)}
+        >
           <ringGeometry args={[0.74, 1.18, 96]} />
           <meshStandardMaterial
             map={sidewall}
             transparent
             roughness={0.55}
             metalness={0.05}
+            emissive="#ff7a1a"
+            emissiveIntensity={hovered === "sidewall" ? 0.1 : 0}
             polygonOffset
             polygonOffsetFactor={-2}
           />
@@ -149,10 +241,19 @@ function TireModel({ scrollRef }: { scrollRef: RefObject<{ v: number }> }) {
       ))}
 
       {/* rim assembly */}
-      <group>
+      <group
+        onPointerMove={onMove}
+        onPointerOut={() => setHovered(null)}
+      >
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.62, 0.62, 0.32, 48]} />
-          <meshStandardMaterial color="#5c5f63" metalness={0.92} roughness={0.28} />
+          <meshStandardMaterial
+            color="#5c5f63"
+            metalness={0.92}
+            roughness={0.28}
+            emissive="#ff7a1a"
+            emissiveIntensity={hovered === "rim" ? 0.08 : 0}
+          />
         </mesh>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.24, 0.24, 0.4, 32]} />
@@ -178,239 +279,277 @@ function TireModel({ scrollRef }: { scrollRef: RefObject<{ v: number }> }) {
           </mesh>
         ))}
       </group>
+
+      {/* ---- soft orange highlight overlays (opacity animated) ---- */}
+      <HighlightTorus r={1.36} tube={0.09} on={hovered === "tread"} />
+      {[0.34, -0.34].map((z) => (
+        <HighlightTorus key={z} r={1.2} tube={0.11} z={z} on={hovered === "shoulder"} />
+      ))}
+      {[0.45, -0.45].map((z) => (
+        <mesh
+          key={z}
+          position={[0, 0, z]}
+          rotation={[0, z < 0 ? Math.PI : 0, 0]}
+        >
+          <ringGeometry args={[0.75, 1.17, 96]} />
+          <GlowMat on={hovered === "sidewall"} />
+        </mesh>
+      ))}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.63, 0.63, 0.34, 48, 1, true]} />
+        <GlowMat on={hovered === "rim"} />
+      </mesh>
     </group>
   );
 }
 
+function GlowMat({ on }: { on: boolean }) {
+  const ref = useRef<THREE.MeshBasicMaterial>(null);
+  useFrame((_, dt) => {
+    if (ref.current) {
+      const target = on ? 0.22 : 0;
+      ref.current.opacity += (target - ref.current.opacity) * Math.min(1, dt * 7);
+    }
+  });
+  return (
+    <meshBasicMaterial
+      ref={ref}
+      color="#ff7a1a"
+      transparent
+      opacity={0}
+      blending={THREE.AdditiveBlending}
+      side={THREE.DoubleSide}
+      depthWrite={false}
+    />
+  );
+}
+
+function HighlightTorus({
+  r,
+  tube,
+  z = 0,
+  on,
+}: {
+  r: number;
+  tube: number;
+  z?: number;
+  on: boolean;
+}) {
+  return (
+    <mesh position={[0, 0, z]}>
+      <torusGeometry args={[r, tube, 8, 96]} />
+      <GlowMat on={on} />
+    </mesh>
+  );
+}
+
 /* ------------------------------------------------------------------ */
-/* Sweeping studio light + camera intro                                */
+/* Camera rig — GSAP zoom into the hovered component, restore on leave  */
 /* ------------------------------------------------------------------ */
-function Rig() {
-  const { camera } = useThree();
-  useEffect(() => {
-    camera.position.set(0, 0.7, 10);
-    gsap.to(camera.position, { z: 5.4, duration: 2.2, ease: "power3.inOut" });
-  }, [camera]);
+function CameraRig({
+  hovered,
+  setPanel,
+}: {
+  hovered: RefObject<PartKey | null>;
+  setPanel: (p: PartKey | null) => void;
+}) {
+  const { camera, controls } = useThree() as any;
+  const tween = useRef<gsap.core.Timeline | null>(null);
+  const current = useRef<PartKey | null>(null);
+
+  useFrame(() => {
+    const part = hovered.current;
+    if (part === current.current) return;
+    current.current = part;
+    setPanel(part);
+
+    tween.current?.kill();
+    const cam = camera as THREE.PerspectiveCamera;
+    if (part) {
+      /* zoom toward the component anchor — ~1.35x closer */
+      const anchor = new THREE.Vector3(...PART_INFO[part].anchor);
+      const dir = anchor.clone().normalize();
+      const dest = dir.multiplyScalar(2.35).add(new THREE.Vector3(0, 0.35, 0.6));
+      tween.current = gsap.timeline().to(cam.position, {
+        x: dest.x,
+        y: dest.y,
+        z: dest.z,
+        duration: 1.1,
+        ease: "power3.inOut",
+      });
+      if (controls) {
+        tween.current
+          .to(controls.target, {
+            x: anchor.x * 0.4,
+            y: anchor.y * 0.4,
+            z: anchor.z * 0.4,
+            duration: 1.1,
+            ease: "power3.inOut",
+          }, 0);
+      }
+    } else {
+      tween.current = gsap.timeline().to(cam.position, {
+        x: HOME_POS.x,
+        y: HOME_POS.y,
+        z: HOME_POS.z,
+        duration: 1.2,
+        ease: "power3.inOut",
+      });
+      if (controls) {
+        tween.current.to(controls.target, {
+          x: 0, y: 0, z: 0,
+          duration: 1.2,
+          ease: "power3.inOut",
+        }, 0);
+      }
+    }
+  });
   return null;
 }
 
 /* ------------------------------------------------------------------ */
-/* Scene wrapper — lights, controls, hotspots                          */
+/* Studio sweep light — soft changes across the rubber surface          */
 /* ------------------------------------------------------------------ */
-export type Hotspot = {
-  id: string;
-  pos: [number, number, number];
-  title: string;
-  lines: string[];
-};
-
-export const HOTSPOTS: Hotspot[] = [
-  {
-    id: "tread",
-    pos: [1.38, 0.15, 0.2],
-    title: "Tread Pattern",
-    lines: [
-      "Deep, self-aligning tread blocks for even wear across the full contact patch.",
-      "72-block layout tuned for forklift & port duty cycles.",
-    ],
-  },
-  {
-    id: "compound",
-    pos: [0.2, 1.42, 0.15],
-    title: "Rubber Compound",
-    lines: [
-      "Cut- and chunk-resistant resilient rubber blend.",
-      "Engineered for 4,000+ working hours without downtime.",
-    ],
-  },
-  {
-    id: "sidewall",
-    pos: [-0.9, 1.0, 0.32],
-    title: "Sidewall Construction",
-    lines: [
-      "Three-stage solid construction — no air, no punctures.",
-      "Reinforced carcass absorbs impact on dock and yard surfaces.",
-    ],
-  },
-  {
-    id: "grip",
-    pos: [0.85, -1.12, 0.2],
-    title: "Grip & Traction",
-    lines: [
-      "High-traction siping maintains bite on wet and oily concrete.",
-      "Stable cornering under full container loads.",
-    ],
-  },
-  {
-    id: "grooves",
-    pos: [-0.75, -1.18, 0.25],
-    title: "Water Drainage Grooves",
-    lines: [
-      "Wide circumferential channels evacuate water fast.",
-      "Reduced hydroplaning risk in outdoor yards.",
-    ],
-  },
-  {
-    id: "rim",
-    pos: [0, 0.55, 0.45],
-    title: "Size & Specifications",
-    lines: [
-      "Size 6.50-10 · Load index 168 · Speed rating A8.",
-      "Press-on and standard fitments available.",
-    ],
-  },
-];
-
-function HotspotDot({
-  h,
-  onPick,
-}: {
-  h: Hotspot;
-  onPick: (h: Hotspot) => void;
-}) {
-  const [hover, setHover] = useState(false);
-  return (
-    <Html position={h.pos} center distanceFactor={7} zIndexRange={[20, 0]}>
-      <div
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-        onClick={() => onPick(h)}
-        className="hs-wrap"
-      >
-        <button className="hs-dot" aria-label={h.title} />
-        <span className={`hs-label${hover ? " on" : ""}`}>{h.title}</span>
-      </div>
-      <style jsx global>{`
-        .hs-wrap {
-          position: relative;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          user-select: none;
-          pointer-events: auto;
-        }
-        .hs-dot {
-          width: 14px;
-          height: 14px;
-          border-radius: 50%;
-          background: var(--accent, #ff7a1a);
-          border: 2px solid rgba(255, 255, 255, 0.85);
-          box-shadow: 0 0 14px rgba(255, 122, 26, 0.8);
-          animation: hs-pulse 2s infinite;
-        }
-        @keyframes hs-pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(255, 122, 26, 0.6);
-          }
-          70% {
-            box-shadow: 0 0 0 12px rgba(255, 122, 26, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(255, 122, 26, 0);
-          }
-        }
-        .hs-label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: #fff;
-          background: rgba(12, 12, 14, 0.72);
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          backdrop-filter: blur(8px);
-          padding: 5px 10px;
-          border-radius: 999px;
-          white-space: nowrap;
-          opacity: 0;
-          transform: translateX(-4px);
-          transition: 0.25s ease;
-        }
-        .hs-label.on {
-          opacity: 1;
-          transform: none;
-        }
-      `}</style>
-    </Html>
-  );
-}
-
-export default function TireScene({
-  onPick,
-  scrollRef,
-}: {
-  onPick: (h: Hotspot) => void;
-  scrollRef: RefObject<{ v: number }>;
-}) {
-  const [idle, setIdle] = useState(true);
-  const resume = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  return (
-    <Canvas
-      dpr={[1, 1.75]}
-      camera={{ fov: 40, position: [0, 0.7, 10] }}
-      gl={{ antialias: true, alpha: true }}
-    >
-      <Rig />
-
-      {/* studio lighting */}
-      <ambientLight intensity={0.25} />
-      <spotLight position={[6, 7, 6]} angle={0.5} penumbra={0.8} intensity={140} color="#ffffff" />
-      <spotLight position={[-7, 3, -5]} angle={0.6} penumbra={1} intensity={90} color="#9fb6ff" />
-      <pointLight position={[0, -3, 3]} intensity={22} color="#ff7a1a" />
-      {/* dramatic sweep that glides across the rubber */}
-      <SweepLight />
-
-      <Float speed={1.4} rotationIntensity={0.15} floatIntensity={0.55}>
-        <TireModel scrollRef={scrollRef} />
-      </Float>
-
-      {HOTSPOTS.map((h) => (
-        <HotspotDot key={h.id} h={h} onPick={onPick} />
-      ))}
-
-      <ContactShadows position={[0, -1.85, 0]} opacity={0.75} scale={12} blur={2.6} far={4} />
-
-      <OrbitControls
-        enablePan={false}
-        enableDamping
-        dampingFactor={0.06}
-        rotateSpeed={0.85}
-        minDistance={3.2}
-        maxDistance={8}
-        minPolarAngle={Math.PI / 3.2}
-        maxPolarAngle={Math.PI / 1.8}
-        autoRotate={idle}
-        autoRotateSpeed={0.9}
-        onStart={() => {
-          setIdle(false);
-          if (resume.current) clearTimeout(resume.current);
-        }}
-        onEnd={() => {
-          resume.current = setTimeout(() => setIdle(true), 2600);
-        }}
-      />
-    </Canvas>
-  );
-}
-
 function SweepLight() {
   const ref = useRef<THREE.SpotLight>(null);
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (ref.current) {
-      ref.current.position.x = Math.sin(t * 0.5) * 5;
-      ref.current.position.z = 3 + Math.cos(t * 0.5) * 2.5;
+      ref.current.position.x = Math.sin(t * 0.25) * 4;
+      ref.current.position.z = 3.5 + Math.cos(t * 0.25) * 2;
     }
   });
   return (
     <spotLight
       ref={ref}
       position={[0, 4, 3]}
-      angle={0.4}
+      angle={0.45}
       penumbra={0.9}
       intensity={110}
       color="#ffffff"
     />
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* Floating label near the selected area                               */
+/* ------------------------------------------------------------------ */
+function PartLabel({
+  part,
+  onLeave,
+}: {
+  part: PartKey | null;
+  onLeave: () => void;
+}) {
+  if (!part) return null;
+  const info = PART_INFO[part];
+  return (
+    <Html position={info.anchor} center distanceFactor={7} zIndexRange={[20, 0]}>
+      <div
+        className="part-label"
+        onMouseLeave={onLeave}
+        style={{ pointerEvents: "none" }}
+      >
+        {info.label}
+      </div>
+      <style jsx global>{`
+        .part-label {
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: #fff;
+          background: rgba(12, 12, 14, 0.72);
+          border: 1px solid rgba(255, 122, 26, 0.45);
+          box-shadow: 0 0 18px rgba(255, 122, 26, 0.25);
+          backdrop-filter: blur(8px);
+          padding: 6px 12px;
+          border-radius: 999px;
+          white-space: nowrap;
+          animation: label-in 0.4s ease;
+        }
+        @keyframes label-in {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: none;
+          }
+        }
+      `}</style>
+    </Html>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Scene wrapper                                                       */
+/* ------------------------------------------------------------------ */
+export default function TireScene({
+  onHover,
+}: {
+  onHover: (p: PartKey | null) => void;
+}) {
+  const hovered = useRef<PartKey | null>(null);
+  const [labelPart, setLabelPart] = useState<PartKey | null>(null);
+
+  const setHovered = (p: PartKey | null) => {
+    hovered.current = p;
+    setLabelPart(p);
+  };
+
+  return (
+    <Canvas
+      dpr={[1, 1.75]}
+      camera={{ fov: 40, position: [0, 0.55, 10] }}
+      gl={{ antialias: true, alpha: true }}
+    >
+      {/* cinematic entrance: slow dolly into the display position */}
+      <EntranceRig />
+
+      {/* studio lighting */}
+      <ambientLight intensity={0.25} />
+      <spotLight position={[6, 7, 6]} angle={0.5} penumbra={0.8} intensity={140} color="#ffffff" />
+      <spotLight position={[-7, 3, -5]} angle={0.6} penumbra={1} intensity={90} color="#9fb6ff" />
+      <pointLight position={[0, -3, 3]} intensity={22} color="#ff7a1a" />
+      <SweepLight />
+
+      <TireModel hovered={labelPart} setHovered={setHovered} />
+
+      <PartLabel part={labelPart} onLeave={() => setHovered(null)} />
+
+      <ContactShadows position={[0, -1.85, 0]} opacity={0.75} scale={12} blur={2.6} far={4} />
+
+      <OrbitControls
+        makeDefault
+        enablePan={false}
+        enableDamping
+        dampingFactor={0.06}
+        rotateSpeed={0.5}
+        minDistance={2.4}
+        maxDistance={8}
+        minPolarAngle={Math.PI / 3.2}
+        maxPolarAngle={Math.PI / 1.8}
+        target={[0, 0, 0]}
+      />
+
+      <CameraRig hovered={hovered} setPanel={onHover} />
+    </Canvas>
+  );
+}
+
+function EntranceRig() {
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.position.set(0, 0.55, 10);
+    gsap.to(camera.position, {
+      x: HOME_POS.x,
+      y: HOME_POS.y,
+      z: HOME_POS.z,
+      duration: 2.2,
+      ease: "power3.inOut",
+    });
+  }, [camera]);
+  return null;
 }

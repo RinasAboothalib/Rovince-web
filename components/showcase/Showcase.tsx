@@ -1,5 +1,6 @@
 "use client";
-/* Premium 3D tire showcase — hero canvas + hotspot panels + spec cards. */
+/* Premium 3D tire showcase — static display stage with raycaster hover
+   inspection panels + glassmorphism spec cards. */
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -7,7 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useEffect } from "react";
-import type { Hotspot } from "./TireScene";
+import type { PartKey } from "./TireScene";
+import { PART_INFO } from "./TireScene";
 
 const TireScene = dynamic(() => import("./TireScene"), { ssr: false });
 
@@ -34,22 +36,11 @@ const PERFORMANCE = [
 ];
 
 export default function Showcase() {
-  const [hot, setHot] = useState<Hotspot | null>(null);
-  const scrollRef = useRef({ v: 0 });
+  const [part, setPart] = useState<PartKey | null>(null);
   const specsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    /* scroll-driven camera feel: rotate the tire as the page scrolls */
     const ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: "#showcase-hero",
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-        onUpdate: (self) => {
-          scrollRef.current.v = self.progress;
-        },
-      });
       gsap.utils.toArray<HTMLElement>(".spec-card").forEach((el, i) => {
         gsap.fromTo(
           el,
@@ -83,7 +74,7 @@ export default function Showcase() {
         <div className="sticky top-0 h-screen overflow-hidden">
           {/* canvas */}
           <div className="absolute inset-0">
-            <TireScene onPick={setHot} scrollRef={scrollRef} />
+            <TireScene onHover={setPart} />
           </div>
 
           {/* top bar */}
@@ -119,16 +110,16 @@ export default function Showcase() {
               transition={{ duration: 1, delay: 0.9 }}
               className="mt-3 text-sm md:text-base tracking-[0.3em] uppercase text-white/45"
             >
-              Resilient Solid · 360° Inspection
+              Resilient Solid · Interactive Inspection
             </motion.p>
           </div>
 
-          {/* hotspot info panel */}
+          {/* hover inspection panel */}
           <div className="absolute bottom-24 left-6 md:left-12 z-10 max-w-sm">
             <AnimatePresence mode="wait">
-              {hot && (
+              {part && (
                 <motion.div
-                  key={hot.id}
+                  key={part}
                   initial={{ opacity: 0, y: 24, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 12, scale: 0.97 }}
@@ -137,17 +128,11 @@ export default function Showcase() {
                 >
                   <div className="mb-3 flex items-center justify-between gap-6">
                     <h3 className="text-sm font-bold tracking-[0.18em] uppercase text-orange-400">
-                      {hot.title}
+                      {PART_INFO[part].title}
                     </h3>
-                    <button
-                      onClick={() => setHot(null)}
-                      className="text-white/40 hover:text-white text-xs"
-                    >
-                      ✕
-                    </button>
                   </div>
                   <ul className="space-y-2">
-                    {hot.lines.map((l) => (
+                    {PART_INFO[part].lines.map((l) => (
                       <li key={l} className="text-sm leading-relaxed text-white/70">
                         {l}
                       </li>
@@ -165,7 +150,7 @@ export default function Showcase() {
             transition={{ delay: 1.6, duration: 1 }}
             className="pointer-events-none absolute bottom-6 inset-x-0 z-10 text-center text-[11px] tracking-[0.25em] uppercase text-white/35"
           >
-            Drag to rotate · Scroll to zoom · Tap ● hotspots
+            Hover the tread, sidewall, rim & shoulder to inspect
           </motion.div>
         </div>
       </section>
