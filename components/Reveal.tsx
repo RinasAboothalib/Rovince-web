@@ -5,7 +5,7 @@ type Props = {
   children: ReactNode;
   className?: string;
   delay?: 0 | 1 | 2 | 3;
-  as?: "div" | "section" | "article" | "span";
+  as?: "div" | "section" | "article" | "span" | "p";
 };
 
 /** Scroll-reveal wrapper — fades/slides content in once on view */

@@ -2,7 +2,7 @@
 /* Split showcase — the product lineup as an editorial two-pane layout.
    Left: the active tire on a lit stage. Right: the full lineup as an
    interactive index; hovering or tapping a row swaps the stage. */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
 import { PRODUCTS } from "@/lib/products";
@@ -10,6 +10,26 @@ import { PRODUCTS } from "@/lib/products";
 export default function LineupWheel() {
   const [active, setActive] = useState(0);
   const p = PRODUCTS[active];
+  const stageRef = useRef<HTMLDivElement>(null);
+
+  /* 3D tilt — pointer position drives rotateX/rotateY on the tire */
+  const onMove = (e: React.MouseEvent) => {
+    const el = stageRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5; // -0.5 .. 0.5
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.setProperty("--rx", `${(-y * 16).toFixed(2)}deg`);
+    el.style.setProperty("--ry", `${(x * 22).toFixed(2)}deg`);
+    el.style.setProperty("--mx", `${((x + 0.5) * 100).toFixed(1)}%`);
+    el.style.setProperty("--my", `${((y + 0.5) * 100).toFixed(1)}%`);
+  };
+  const onLeave = () => {
+    const el = stageRef.current;
+    if (!el) return;
+    el.style.setProperty("--rx", "0deg");
+    el.style.setProperty("--ry", "0deg");
+  };
 
   return (
     <section className="sec lineup-sec" aria-label="Product lineup">
@@ -27,9 +47,18 @@ export default function LineupWheel() {
 
         <Reveal className="lineup-panel">
           {/* Stage */}
-          <div className="lineup-stage">
+          <div
+            ref={stageRef}
+            className="lineup-stage"
+            onMouseMove={onMove}
+            onMouseLeave={onLeave}
+          >
             <div className="stage-glow" aria-hidden />
-            <img key={p.img} src={p.img} alt={`${p.name} — ${p.sub}`} />
+            <div className="stage-tilt">
+              <img key={p.img} src={p.img} alt={`${p.name} — ${p.sub}`} />
+              <div className="stage-sheen" aria-hidden />
+            </div>
+            <div className="stage-shadow" aria-hidden />
             <div className="stage-badge">
               <span className="dot" aria-hidden />
               {p.sub}
@@ -119,6 +148,85 @@ export default function LineupWheel() {
           width: min(78%, 460px);
           filter: drop-shadow(0 40px 50px rgba(0, 0, 0, 0.65));
           animation: tire-in 0.7s var(--ease);
+        }
+
+        /* ---- 3D tilt ---- */
+        .lineup-stage {
+          perspective: 900px;
+        }
+        .stage-tilt {
+          position: relative;
+          display: grid;
+          place-items: center;
+          transform-style: preserve-3d;
+          transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+          transition: transform 0.25s var(--ease);
+          will-change: transform;
+        }
+        .lineup-stage:hover .stage-tilt {
+          transition: transform 0.08s linear;
+        }
+        .stage-tilt img {
+          width: min(78%, 460px);
+          transform: translateZ(40px);
+        }
+        /* continuous 3D turntable + float on the tire itself */
+        .stage-tilt img {
+          animation:
+            tire-in 0.7s var(--ease),
+            tire-float 4.5s ease-in-out infinite,
+            tire-spin 14s linear infinite;
+        }
+        @keyframes tire-float {
+          0%,
+          100% {
+            margin-top: 0;
+            translate: 0 0;
+          }
+          50% {
+            translate: 0 -14px;
+          }
+        }
+        @keyframes tire-spin {
+          from {
+            rotate: y 0deg;
+          }
+          to {
+            rotate: y 360deg;
+          }
+        }
+        /* moving specular highlight that tracks the cursor */
+        .stage-sheen {
+          position: absolute;
+          inset: -10%;
+          pointer-events: none;
+          background: radial-gradient(
+            32% 32% at var(--mx, 50%) var(--my, 50%),
+            rgba(255, 255, 255, 0.14),
+            transparent 70%
+          );
+          mix-blend-mode: screen;
+          opacity: 0;
+          transition: opacity 0.4s var(--ease);
+        }
+        .lineup-stage:hover .stage-sheen {
+          opacity: 1;
+        }
+        /* grounded shadow that shifts opposite to the tilt */
+        .stage-shadow {
+          position: absolute;
+          bottom: 6%;
+          left: 50%;
+          width: 55%;
+          height: 36px;
+          transform: translateX(calc(-50% + var(--ry, 0deg) * -1.6));
+          background: radial-gradient(
+            50% 50% at 50% 50%,
+            rgba(0, 0, 0, 0.7),
+            transparent 70%
+          );
+          filter: blur(10px);
+          pointer-events: none;
         }
         @keyframes tire-in {
           from {
@@ -266,7 +374,10 @@ export default function LineupWheel() {
         }
         @media (prefers-reduced-motion: reduce) {
           .lineup-stage img {
-            animation: none;
+            animation: tire-in 0.7s var(--ease);
+          }
+          .stage-tilt {
+            transform: none;
           }
         }
       `}</style>
