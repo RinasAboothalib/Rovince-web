@@ -674,6 +674,17 @@ form.card{padding:34px}
 .form-ok{margin-top:14px;padding:14px;border-radius:12px;background:rgba(255,176,32,.12);
   border:1px solid var(--line-2);color:var(--accent);font-size:.9rem}
 
+/* ---------- home about + seo ---------- */
+.about-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+.about-copy p{color:var(--muted);margin-bottom:1em}
+.about-copy .btn{margin-top:10px}
+.about-pic{margin:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line)}
+.about-pic img{width:100%;display:block;object-fit:cover;transition:.6s var(--ease)}
+.about-pic:hover img{transform:scale(1.03)}
+.seo-block{max-width:72ch}
+.seo-block h2{font-size:clamp(1.4rem,3vw,2rem);margin-bottom:.6em}
+.seo-block p{color:var(--muted);font-size:.95rem;line-height:1.7}
+
 /* ---------- cta ---------- */
 .cta-band{text-align:center;position:relative;overflow:hidden;
   background:linear-gradient(135deg,rgba(255,176,32,.12),rgba(255,122,24,.05));border:1px solid var(--line);border-radius:28px;
@@ -709,6 +720,9 @@ form.card{padding:34px}
   .hero-visual{max-width:440px;margin:0 auto}
   .ribbon-stage{height:420px}
   .ribbon-card{width:230px;height:230px;margin:-115px 0 0 -115px}
+}
+@media(max-width:900px){
+  .about-grid{grid-template-columns:1fr;gap:28px}
 }
 @media(max-width:540px){
   .feat-grid,.prod-grid,.prod-grid.two,.comp-grid,.ind-grid{grid-template-columns:1fr}
