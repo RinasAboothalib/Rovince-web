@@ -1,45 +1,37 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Reveal from "@/components/Reveal";
 import ContactForm from "@/components/ContactForm";
 
 export const metadata: Metadata = {
-  title: "Contact Rovince — Let's Roll Together",
+  title: "Contact Rovince Tire",
   description:
-    "Get a quote, partner with Rovince, or learn more about our industrial tires. Great journeys start with a simple hello.",
+    "US phone and sales email, Compton CA warehouse and the Nattandiya plant. Get a quote, become a dealer, or find a dealer near you.",
+  alternates: { canonical: "/contact" },
 };
 
-export default function Contact() {
+export default function ContactPage() {
   return (
-    <>
-      <section className="pbanner">
-        <div className="wrap">
-          <Reveal as="p" className="crumb"><Link href="/">Home</Link> / Contact</Reveal>
-          <Reveal delay={1}><h1>Let&apos;s Roll <span className="grad">Together</span></h1></Reveal>
-          <Reveal delay={2}>
-            <p className="lead">
-              Whether you need a quote, want to partner with us, or just want to learn more about our tires —
-              we&apos;re here and ready to talk. Great journeys start with a simple hello.
-            </p>
-          </Reveal>
+    <section className="sec" style={{ paddingTop: 120 }}>
+      <div className="wrap">
+        <div className="sec-head">
+          <span className="eyebrow">Contact</span>
+          <h2>Talk to US sales</h2>
+          <p className="lead">
+            For a price, add your sizes to the <Link href="/quote" style={{ textDecoration: "underline" }}>quote list</Link> and
+            send one request. For anything else, reach us below.
+          </p>
         </div>
-      </section>
 
-      <section className="sec" style={{ paddingTop: 20 }}>
-        <div className="wrap contact-grid">
-          <Reveal>
-            <span className="eyebrow">Get in Touch</span>
-            <h2 style={{ fontSize: "clamp(1.6rem,3.5vw,2.3rem)", margin: ".3em 0 1em" }}>Reach the Rovince team</h2>
-            <div className="info-item"><div className="ic">✉️</div><div><h4>Email</h4><a href="mailto:info@rovincetire.com">info@rovincetire.com</a></div></div>
-            <div className="info-item"><div className="ic">🌐</div><div><h4>Website</h4><a href="https://www.rovincetire.com" target="_blank" rel="noopener noreferrer">www.rovincetire.com</a></div></div>
-            <div className="info-item"><div className="ic">🏭</div><div><h4>Manufacturing</h4><p>Premium natural rubber · Made in Sri Lanka</p></div></div>
-            <div className="info-item"><div className="ic">🇺🇸</div><div><h4>Standards</h4><p>USA-based solid tire manufacturer · American industrial standards</p></div></div>
-          </Reveal>
-          <Reveal delay={1}>
-            <ContactForm />
-          </Reveal>
+        <div className="contact-grid">
+          <div>
+            <div className="info-item"><div className="ic">📞</div><div><h4>US Sales</h4><a href="tel:+15625550143">+1 (562) 555-0143</a><p style={{ marginTop: 2 }}>Mon–Fri, 8am–5pm PT <span className="confirm-tag">[confirm]</span></p></div></div>
+            <div className="info-item"><div className="ic">✉️</div><div><h4>Sales email</h4><a href="mailto:sales@rovincetire.com">sales@rovincetire.com</a> <span className="confirm-tag">[confirm]</span></div></div>
+            <div className="info-item"><div className="ic">🏬</div><div><h4>US warehouse</h4><p>Compton, California · ships in 1–2 working days</p></div></div>
+            <div className="info-item"><div className="ic">🏭</div><div><h4>Plant</h4><p>Nattandiya, Sri Lanka</p></div></div>
+          </div>
+          <ContactForm />
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

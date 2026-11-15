@@ -1,164 +1,125 @@
 import Link from "next/link";
-import Reveal from "@/components/Reveal";
-import Stats from "@/components/Stats";
-import SizeFinder from "@/components/SizeFinder";
-import LineupWheel from "@/components/LineupWheel";
-import { IMG_BASE } from "@/lib/products";
-
-const FEATURES = [
-  ["🏛️", "American Standards, Global Trust", "Decades of industrial tire engineering deliver the precision and reliability industries demand — strength and durability for the most demanding working conditions."],
-  ["🌿", "Premium Rubber, Built to Last", "Made with the world's finest natural rubber from Sri Lanka. High-quality compounds mean long-lasting treads, superior damage resistance, and optimal heavy-duty performance."],
-  ["⚡", "Built for the Grind 24/7", "Engineered for puncture resistance and high load capacities, Rovince tires keep running through back-to-back shifts. Our zero-downtime promise keeps your business moving."],
-  ["⏱️", "4000 Hours of Performance", "Engineered for 4,000+ working hours — reducing replacements, minimizing downtime, and maximizing return on investment for continuous operation."],
-  ["🏷️", "Your Brand, Our Craftsmanship", "With our private label manufacturing program, you get world-class tires with your name on them — you own the product, the market, and the profits."],
-  ["💰", "Premium Quality, Smart Price", "The best-priced premium tire brand proudly made in Sri Lanka. Big performance, smart investment — no compromise between performance and price."],
-];
-
-const IND = [
-  ["industry_1.webp", "Construction & Infrastructure"],
-  ["industry_2.webp", "Warehousing & Logistics"],
-  ["industry_3.webp", "Transport & Material Handling"],
-  ["industry_4.webp", "Ports, Shipping & Container Yards"],
-];
+import SizeSearch from "@/components/SizeSearch";
+import Sidewall from "@/components/Sidewall";
+import { FAMILIES } from "@/data/sizes";
+import { HERO_BANNER, INDUSTRIES, familyTire } from "@/lib/media";
 
 export default function Home() {
   return (
     <>
-      {/* HERO — old-site tire-row banner, restyled (no frame, no glow) */}
-      <section className="hero-banner">
+      {/* HERO — tire-row banner backdrop + size search */}
+      <section className="home-hero">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="hero-bg" src={IMG_BASE.replace("themes/rovincetire/assets/images/", "") + "uploads/2026/06/banner_1.jpg"} alt="Rovince industrial tire lineup" />
-        <div className="hero-banner-shade" />
-        <div className="wrap hero-banner-inner">
-          <Reveal as="span" className="eyebrow">American Standards · Global Trust</Reveal>
-          <Reveal delay={1}>
-            <h1>
-              Industrial Tires
-              <br />
-              Engineered for <span className="grad">Strength</span>
-            </h1>
-          </Reveal>
-          <Reveal delay={2}>
-            <p className="hero-tagline">Built for Performance</p>
-          </Reveal>
-          <Reveal delay={2}>
+        <img className="home-hero-bg" src={HERO_BANNER} alt="" aria-hidden />
+        <div className="home-hero-shade" />
+        <div className="wrap home-hero-grid">
+          <div className="home-hero-copy">
+            <span className="eyebrow">Rovince · solid industrial tires</span>
+            <h1>What does your<br />old tire say?</h1>
             <p className="lead">
-              Sri Lanka&apos;s first and only USA-based solid tire manufacturer. Built from premium natural
-              rubber for maximum load-bearing capacity, superior grip, and long-lasting durability — even in the
-              most demanding environments.
+              Type the size from its sidewall. We&apos;ll show you the Rovince tire that fits, what it carries
+              and where it ships from.
             </p>
-          </Reveal>
-          <Reveal delay={3}>
-            <div className="hero-cta">
-              <Link href="/products" className="btn btn-primary">Explore Our Lineup →</Link>
-              <Link href="/about" className="btn btn-ghost">Read More</Link>
+            <SizeSearch autofocus />
+          </div>
+          <div className="home-hero-art">
+            <Sidewall size="6.50-10" line="R1 Super Premium" pattern="Traction" />
+          </div>
+        </div>
+      </section>
+
+      {/* PROOF STRIP */}
+      <section className="proof-strip">
+        <div className="wrap proof-grid">
+          <div><strong>Since 2014</strong><span>First solid tire built in Sri Lanka</span></div>
+          <div><strong>About 70 sizes</strong><span>Across four tire lines</span></div>
+          <div><strong>Black or grey</strong><span>Non-marking grey in every size</span></div>
+          <div><strong>Compton, CA</strong><span>Ships in 1–2 working days <em className="confirm-tag">[confirm]</em></span></div>
+        </div>
+      </section>
+
+      {/* TIRE LINES */}
+      <section className="sec">
+        <div className="wrap">
+          <div className="sec-head">
+            <span className="eyebrow">Four tire lines</span>
+            <h2>Built for forklifts, skid steers and port machines</h2>
+          </div>
+          <div className="line-cards">
+            {FAMILIES.map((f) => (
+              <Link key={f.slug} href={`/tires/${f.slug}`} className="line-card line-card-img">
+                <span className="line-card-pic">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={familyTire(f.family)} alt={f.title} loading="lazy" />
+                </span>
+                <h3>{f.title}</h3>
+                <p>{f.blurb}</p>
+                <span className="line-card-go">See sizes →</span>
+              </Link>
+            ))}
+          </div>
+          <div className="home-no-size">
+            <p>Don&apos;t know the size on your tire?</p>
+            <div className="hns-btns">
+              <Link href="/machine" className="btn btn-ghost">Pick your machine →</Link>
+              <Link href="/sizes" className="btn btn-ghost">Browse all sizes →</Link>
             </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* PRODUCT LINEUP — turnable 3D wheel */}
-      <LineupWheel />
-
-      {/* SIZE FINDER — start from the size on the old tire */}
-      <SizeFinder />
-
-      {/* ABOUT */}
-      <section className="sec">
-        <div className="wrap split">
-          <Reveal className="media">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={IMG_BASE + "home_about_1.webp"} alt="Rovince tire manufacturing" />
-          </Reveal>
-          <Reveal delay={1}>
-            <span className="eyebrow">About Us</span>
-            <h2 style={{ fontSize: "clamp(1.9rem,4vw,3rem)", margin: ".3em 0" }}>
-              We don&apos;t just make tires. We engineer endurance.
-            </h2>
-            <p className="lead">
-              At Rovince, we specialize in industrial tires engineered for reliability, safety, and endurance.
-              Each tire is crafted using premium compounds and advanced engineering to meet strict international
-              and USA standards — produced from Sri Lankan premium natural rubber.
-            </p>
-            <p className="lead" style={{ marginTop: "1em" }}>
-              From forklifts in warehouses and skid steers on construction sites to heavy machinery in
-              manufacturing plants, our tires are proven to perform under pressure.
-            </p>
-            <Link href="/about" className="btn btn-ghost" style={{ marginTop: "1.6em" }}>
-              More about us →
-            </Link>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section className="sec">
-        <div className="wrap">
-          <Reveal className="sec-head">
-            <span className="eyebrow">A Class Apart</span>
-            <h2>What Makes Rovince Tires Different</h2>
-            <p className="lead">Real-world industrial expertise, built into every product we deliver.</p>
-          </Reveal>
-          <div className="feat-grid">
-            {FEATURES.map(([ic, h, p], i) => (
-              <Reveal key={h} className="card" delay={(i % 3) as 0 | 1 | 2}>
-                <div className="ic">{ic}</div>
-                <h3>{h}</h3>
-                <p>{p}</p>
-              </Reveal>
-            ))}
           </div>
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="sec stats">
+      {/* INDUSTRIES — original site photos + copy */}
+      <section className="sec" style={{ paddingTop: 0 }}>
         <div className="wrap">
-          <div className="sec-head center">
-            <span className="eyebrow">Tough Tires. Stronger Numbers.</span>
-          </div>
-          <Stats />
-        </div>
-      </section>
-
-      {/* INDUSTRIES preview */}
-      <section className="sec">
-        <div className="wrap">
-          <Reveal className="sec-head">
-            <span className="eyebrow">Built for Every Industry</span>
-            <h2>Trusted Where Performance Can&apos;t Stop</h2>
+          <div className="sec-head">
+            <span className="eyebrow">Built for every industry</span>
+            <h2>Trusted where performance can&apos;t stop</h2>
             <p className="lead">
-              From bustling warehouses to rugged mining fields, Rovince Tires are trusted by industries that
-              demand strength, reliability, and non-stop performance.
+              From bustling warehouses to rugged mining fields, Rovince tires are trusted by industries that
+              demand strength, reliability and non-stop performance.
             </p>
-          </Reveal>
-          <div className="ind-grid">
-            {IND.map(([img, label], i) => (
-              <Reveal key={label} className="ind" delay={(i % 4) as 0 | 1 | 2 | 3}>
+          </div>
+          <div className="industries-grid">
+            {INDUSTRIES.map((i) => (
+              <figure className="ind" key={i.label}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={IMG_BASE + img} alt="" />
-                <span>{label}</span>
-              </Reveal>
+                <img src={i.img} alt={i.label} loading="lazy" />
+                <figcaption>{i.label}</figcaption>
+              </figure>
             ))}
-          </div>
-          <div style={{ textAlign: "center", marginTop: 36 }}>
-            <Link href="/industries" className="btn btn-ghost">See all industries →</Link>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="sec">
+      {/* COMPLIANCE STRIP */}
+      <section className="sec" style={{ paddingTop: 0 }}>
         <div className="wrap">
-          <Reveal className="cta-band">
-            <span className="eyebrow">Let&apos;s Roll Together</span>
-            <h2>Great Journeys Start With a Simple Hello</h2>
-            <p>
-              Whether you need a quote, want to partner with us, or just want to learn more about our tires —
-              we&apos;re here and ready to talk.
-            </p>
-            <Link href="/contact" className="btn btn-primary">Contact Us →</Link>
-          </Reveal>
+          <div className="comp-strip">
+            <span className="eyebrow">Made to standard</span>
+            <div className="comp-strip-items">
+              <span>REACH (EC 1907/2006)</span>
+              <span>Tire &amp; Rim Association</span>
+              <span>ETRTO</span>
+              <Link href="/compliance" className="comp-strip-link">See compliance →</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* DEALER CTA */}
+      <section className="sec" style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="dealer-cta">
+            <div>
+              <span className="eyebrow">For tire dealers &amp; fleets</span>
+              <h2>Check a size, its load and its stock — then quote it.</h2>
+              <p className="lead">Add several sizes to one quote list and send a single request. No email thread per size.</p>
+            </div>
+            <div className="dealer-cta-btns">
+              <Link href="/contact" className="btn btn-primary">Become a dealer</Link>
+              <Link href="/quote" className="btn btn-quote">View quote list →</Link>
+            </div>
+          </div>
         </div>
       </section>
     </>

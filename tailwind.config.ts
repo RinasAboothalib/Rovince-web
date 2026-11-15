@@ -20,9 +20,10 @@ const config: Config = {
         border: "rgb(var(--border) / <alpha-value>)",
         ring: "rgb(var(--ring) / <alpha-value>)",
         accent: "var(--accent)",
+        quote: "var(--quote)",
         muted: {
-          DEFAULT: "rgb(var(--muted) / <alpha-value>)",
-          foreground: "rgb(var(--muted-foreground) / <alpha-value>)",
+          DEFAULT: "rgb(var(--ch-muted) / <alpha-value>)",
+          foreground: "rgb(var(--ch-muted-foreground) / <alpha-value>)",
         },
       },
       fontFamily: {

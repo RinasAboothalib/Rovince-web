@@ -1,114 +1,84 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Reveal from "@/components/Reveal";
-import Stats from "@/components/Stats";
-import { IMG_BASE } from "@/lib/products";
+import { ABOUT, CLASS_APART } from "@/lib/content";
+import { ABOUT_PHOTO } from "@/lib/media";
 
 export const metadata: Metadata = {
-  title: "About Rovince — Industrial Tire Engineering",
+  title: "About Rovince Tire",
   description:
-    "Rovince is Sri Lanka's first and only USA-based solid tire manufacturer, producing premium industrial tires from Sri Lankan natural rubber.",
+    "Rovince builds solid industrial tires at its own plant in Nattandiya, Sri Lanka, and sells and ships them to US customers from Compton, California. Exporting to 20+ countries.",
+  alternates: { canonical: "/about" },
 };
 
-const VALUES = [
-  ["🌿", "Premium Rubber, Built for Durability", "Every Rovince tire is made with the best natural rubber from Sri Lanka, where the world's finest natural rubber grows. High-quality compounds guarantee long-lasting treads, resistance to damage, and optimal performance in heavy-duty, puncture-prone environments."],
-  ["⚡", "Built for the Grind 24/7", "Industries never stop — and neither do our tires. Engineered for puncture resistance and high load capacities, they help keep your operations running without interruption. Our zero-downtime promise keeps your business moving no matter what."],
-  ["⏱️", "4000 Hours of Performance", "Rovince tires are engineered to deliver over 4,000 working hours — reducing replacements, minimizing downtime, and maximizing return on investment for continuous operation on ports, fleets and sites."],
-  ["🏷️", "Your Brand, Our Craftsmanship", "Have a vision for your own tire brand? Our private label manufacturing program gives you world-class tires with your name on them — you own the product, the market, and the profits."],
-  ["💰", "Premium Quality, Competitive Pricing", "You don't have to choose between performance and price. Rovince delivers exceptional value as the best-priced premium tire brand proudly made in Sri Lanka."],
-  ["🏛️", "Real-World Expertise", "With decades of experience in industrial tire engineering and manufacturing, Rovince brings precision and reliability to every yard, warehouse and construction zone."],
-];
-
-export default function About() {
+export default function AboutPage() {
   return (
-    <>
-      <section className="pbanner">
-        <div className="wrap">
-          <Reveal as="p" className="crumb"><Link href="/">Home</Link> / About</Reveal>
-          <Reveal delay={1}>
-            <h1>American Standards,<br /><span className="grad">Global Trust</span></h1>
-          </Reveal>
-          <Reveal delay={2}>
-            <p className="lead">Decades of industrial tire engineering, built into every product we deliver.</p>
-          </Reveal>
+    <section className="sec" style={{ paddingTop: 120 }}>
+      <div className="wrap">
+        <div className="sec-head">
+          <span className="eyebrow">About · where strength meets precision</span>
+          <h2>Solid tires, built in Sri Lanka, sold from California</h2>
+          <p className="lead">{ABOUT.lead}</p>
         </div>
-      </section>
 
-      <section className="sec" style={{ paddingTop: 20 }}>
-        <div className="wrap split">
-          <Reveal className="media">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={IMG_BASE + "home_about_1.webp"} alt="Rovince tire manufacturing" />
-          </Reveal>
-          <Reveal delay={1}>
-            <span className="eyebrow">Who We Are</span>
-            <h2 style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)", margin: ".3em 0" }}>
-              We don&apos;t just manufacture tires — we engineer endurance.
-            </h2>
-            <p className="lead">
-              At Rovince, we specialize in industrial tires engineered for reliability, safety, and endurance.
-              Each tire is crafted using premium compounds and advanced engineering to meet strict international
-              and USA standards. We are Sri Lanka&apos;s first and only USA-based solid tire manufacturer,
-              producing tires from Sri Lankan premium natural rubber.
-            </p>
-            <p className="lead" style={{ marginTop: "1em" }}>
-              Rovince industrial &amp; construction tires deliver maximum load-bearing capacity, superior grip,
-              and long-lasting durability, even in the most demanding environments. For years, Rovince tires have
-              been trusted by industries and construction operations across the USA.
-            </p>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="sec" style={{ paddingTop: 0 }}>
-        <div className="wrap">
-          <Reveal className="sec-head">
-            <span className="eyebrow">What Makes Us a Class Apart</span>
-            <h2>Built Different, From the Ground Up</h2>
-          </Reveal>
-          <div className="feat-grid">
-            {VALUES.map(([ic, h, p], i) => (
-              <Reveal key={h} className="card" delay={(i % 3) as 0 | 1 | 2}>
-                <div className="ic">{ic}</div>
-                <h3>{h}</h3>
-                <p>{p}</p>
-              </Reveal>
+        <div className="split">
+          <div>
+            {ABOUT.body.map((p, i) => (
+              <p className="lead" key={i} style={{ marginBottom: "1em" }}>{p}</p>
             ))}
+            <p className="exports">
+              <strong>Exports:</strong> {ABOUT.exports.join(" · ")} <span className="confirm-tag">[confirm list]</span>
+            </p>
+          </div>
+          <div className="media">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={ABOUT_PHOTO} alt="Rovince tire manufacturing" />
           </div>
         </div>
-      </section>
 
-      <section className="sec stats">
-        <div className="wrap">
-          <div className="sec-head center"><span className="eyebrow">Tough Tires. Stronger Numbers.</span></div>
-          <Stats />
+        {/* facility + vision + mission */}
+        <div className="feat-grid" style={{ marginTop: 50 }}>
+          <div className="card"><h3>Our facility — Nattandiya</h3><p>{ABOUT.facility} <span className="confirm-tag">[real plant photos to come]</span></p></div>
+          <div className="card"><h3>Our vision</h3><p>&ldquo;{ABOUT.vision}&rdquo;</p></div>
+          <div className="card"><h3>Our mission</h3><p>{ABOUT.mission}</p></div>
         </div>
-      </section>
 
-      <section className="sec" id="compliance">
-        <div className="wrap">
-          <Reveal className="sec-head center">
-            <span className="eyebrow">Unmatched Compliance Excellence</span>
-            <h2>Certified. Compliant. Dependable.</h2>
-          </Reveal>
-          <div className="comp-grid">
-            <Reveal className="comp"><div className="badge">REACH</div><p>Chemicals approved by the European Chemical Directive.</p></Reveal>
-            <Reveal className="comp" delay={1}><div className="badge">The Tire &amp; Rim Association</div><p>Ensures full load capacity and safety standards.</p></Reveal>
-            <Reveal className="comp" delay={2}><div className="badge">ETRTO</div><p>Ensures full load capacity and safety standards.</p></Reveal>
+        {/* what makes Rovince a class apart */}
+        <div className="sec-head" style={{ marginTop: 60 }}>
+          <span className="eyebrow">A class apart</span>
+          <h2>What makes Rovince tires different</h2>
+        </div>
+        <div className="feat-grid">
+          {CLASS_APART.map((c) => (
+            <div className="card" key={c.title}>
+              <h3>{c.title}</h3>
+              <p>{c.body} {c.confirm && <span className="confirm-tag">[confirm test conditions]</span>}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* core values */}
+        <div className="sec-head" style={{ marginTop: 60 }}>
+          <span className="eyebrow">Core values</span>
+          <h2>What we stand on</h2>
+        </div>
+        <div className="values-grid">
+          {ABOUT.values.map((v) => (
+            <div className="value" key={v.k}>
+              <strong>{v.k}</strong>
+              <p>{v.v}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="dealer-cta" style={{ marginTop: 60 }}>
+          <div>
+            <span className="eyebrow">Work with us</span>
+            <h2>Become a Rovince dealer</h2>
+            <p className="lead">Great journeys start with a simple hello.</p>
           </div>
+          <Link href="/contact" className="btn btn-primary">Contact us →</Link>
         </div>
-      </section>
-
-      <section className="sec" style={{ paddingTop: 0 }}>
-        <div className="wrap">
-          <Reveal className="cta-band">
-            <span className="eyebrow">Let&apos;s Roll Together</span>
-            <h2>Partner With Rovince</h2>
-            <p>OEM, private-label or a single quote — great journeys start with a simple hello.</p>
-            <Link href="/contact" className="btn btn-primary">Contact Us →</Link>
-          </Reveal>
-        </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

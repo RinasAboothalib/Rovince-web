@@ -31,12 +31,14 @@ export default function LineupWheel() {
             <div className="stage-glow" aria-hidden />
             <div className="stage-tilt">
               <img
-                key={activeProduct.img}
+                key={active}
                 src={activeProduct.img}
                 alt={`${activeProduct.name} — ${activeProduct.sub}`}
               />
               <div className="stage-sheen" aria-hidden />
             </div>
+            {/* one-shot transition FX, re-mounted on every change */}
+            <span className="stage-fx" key={`fx-${active}`} aria-hidden />
             <div className="stage-shadow" aria-hidden />
             <div className="stage-badge">
               <span className="dot" aria-hidden />
@@ -143,9 +145,90 @@ export default function LineupWheel() {
         .stage-tilt img {
           width: min(78%, 460px);
           transform: none;
+          animation: tireRollIn 0.8s var(--ease) both;
+          will-change: transform, filter, opacity;
         }
         .stage-sheen {
           display: none;
+        }
+
+        /* ---- transition FX: tire rolls in + amber light sweep + glow flash ---- */
+        @keyframes tireRollIn {
+          0% {
+            opacity: 0;
+            transform: translateX(-54px) rotate(-26deg) scale(0.9);
+            filter: blur(5px) drop-shadow(0 40px 50px rgba(0, 0, 0, 0.65));
+          }
+          55% {
+            opacity: 1;
+            transform: translateX(6px) rotate(5deg) scale(1.015);
+            filter: blur(0) drop-shadow(0 40px 50px rgba(0, 0, 0, 0.65));
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) rotate(0) scale(1);
+            filter: drop-shadow(0 40px 50px rgba(0, 0, 0, 0.65));
+          }
+        }
+        .stage-fx {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+          pointer-events: none;
+          overflow: hidden;
+          border-radius: var(--radius);
+        }
+        .stage-fx::before {
+          content: "";
+          position: absolute;
+          top: -25%;
+          bottom: -25%;
+          left: 0;
+          width: 42%;
+          background: linear-gradient(
+            100deg,
+            transparent,
+            rgba(255, 176, 32, 0.3),
+            rgba(255, 122, 24, 0.22),
+            transparent
+          );
+          filter: blur(7px);
+          transform: translateX(-220%) skewX(-12deg);
+          animation: stageSweep 0.85s var(--ease);
+        }
+        .stage-fx::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(
+            52% 52% at 50% 56%,
+            var(--accent-glow),
+            transparent 70%
+          );
+          opacity: 0;
+          animation: stageFlash 0.85s var(--ease);
+        }
+        @keyframes stageSweep {
+          0% {
+            transform: translateX(-220%) skewX(-12deg);
+            opacity: 0;
+          }
+          18% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(460%) skewX(-12deg);
+            opacity: 0;
+          }
+        }
+        @keyframes stageFlash {
+          0%,
+          100% {
+            opacity: 0;
+          }
+          32% {
+            opacity: 0.5;
+          }
         }
         .stage-shadow {
           position: absolute;
@@ -297,11 +380,11 @@ export default function LineupWheel() {
           }
         }
         @media (prefers-reduced-motion: reduce) {
-          .lineup-stage img {
-            animation: tire-in 0.7s var(--ease);
+          .stage-tilt img {
+            animation: none;
           }
-          .stage-tilt {
-            transform: none;
+          .stage-fx {
+            display: none;
           }
         }
       `}</style>

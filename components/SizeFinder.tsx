@@ -38,6 +38,7 @@ export default function SizeFinder() {
   // machine mode
   const [machineId, setMachineId] = useState(MACHINES[0].id);
   const [pos, setPos] = useState<"front" | "rear">("front");
+  const [tread, setTread] = useState<"Grip" | "Glide">("Grip");
 
   // quote
   const [quote, setQuote] = useState<QuoteItem[]>([
@@ -195,14 +196,14 @@ export default function SizeFinder() {
             ) : (
               /* ---------- MACHINE MODE ---------- */
               <div className="machine">
-                <label className="m-label">Pick your machine</label>
+                <label className="m-label"><span className="m-step">Step 1 of 3</span> Pick your machine</label>
                 <select value={machineId} onChange={(e) => setMachineId(e.target.value)}>
                   {MACHINES.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
                 </select>
                 <p className="m-note">{machine.note}</p>
 
                 <div className="m-wheel">
-                  <span>Which wheel?</span>
+                  <span><span className="m-step">Step 2 of 3</span> Which wheel?</span>
                   <div className="pills">
                     <button className={pos === "front" ? "on" : ""} onClick={() => setPos("front")}>Front (load)</button>
                     <button className={pos === "rear" ? "on" : ""} onClick={() => setPos("rear")}>Rear (steering)</button>
@@ -214,13 +215,26 @@ export default function SizeFinder() {
                     : "Rear wheels steer. They're smaller and rated for steering duty."}
                 </p>
 
+                <div className="m-wheel">
+                  <span><span className="m-step">Step 3 of 3</span> Glide or grip?</span>
+                  <div className="pills">
+                    <button className={tread === "Glide" ? "on" : ""} onClick={() => setTread("Glide")}>Glide</button>
+                    <button className={tread === "Grip" ? "on" : ""} onClick={() => setTread("Grip")}>Grip</button>
+                  </div>
+                </div>
+                <p className="m-hint">
+                  {tread === "Glide"
+                    ? "Glide — a smoother, low-resistance tread for indoor floors and electric trucks; the quiet, non-marking choice."
+                    : "Grip — a deep traction tread for yards, ramps and rough ground, where bite matters more than roll."}
+                </p>
+
                 <div className="m-sizes">
-                  <div className="m-sizes-head">Common {pos} sizes — check the number on your tire</div>
+                  <div className="m-sizes-head">Likely {pos} sizes · {tread.toLowerCase()} tread — check the number on your tire</div>
                   {machineSizes.map((s) => (
                     <div className="m-row" key={s.id + pos}>
                       <span className="m-size">{s.size}</span>
                       <span className="m-load">{kg(pos === "front" ? s.loadWheelKg : s.steeringKg)} kg {pos === "front" ? "load" : "steering"} wheel</span>
-                      <button className="m-add" onClick={() => addToQuote(s, s.colors[0])}>Add</button>
+                      <button className="m-add" onClick={() => addToQuote(s, tread === "Glide" ? (s.colors.find((c) => c.includes("grey")) ?? s.colors[0]) : s.colors[0])}>Add</button>
                     </div>
                   ))}
                 </div>
