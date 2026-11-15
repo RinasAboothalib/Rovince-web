@@ -2,8 +2,8 @@
 /* Premium static product display — the tire stays fixed and solid, with only
    subtle idle motion. Raycaster hover inspection: hovering a component
    smoothly zooms the camera into it, highlights it, and shows a label. */
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Html, OrbitControls } from "@react-three/drei";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { ContactShadows, Html } from "@react-three/drei";
 import {
   useEffect,
   useLayoutEffect,
@@ -19,6 +19,11 @@ import gsap from "gsap";
 /* Part definitions                                                    */
 /* ------------------------------------------------------------------ */
 export type PartKey = "tread" | "sidewall" | "rim" | "shoulder";
+type InspectionTarget = {
+  part: PartKey;
+  point: THREE.Vector3;
+  pointer: [number, number];
+};
 
 export const PART_INFO: Record<
   PartKey,
@@ -112,9 +117,11 @@ const HOME_TARGET = new THREE.Vector3(0, 0, 0);
 function TireModel({
   hovered,
   setHovered,
+  clearHovered,
 }: {
   hovered: PartKey | null;
-  setHovered: (p: PartKey | null) => void;
+  setHovered: (target: InspectionTarget) => void;
+  clearHovered: () => void;
 }) {
   const group = useRef<THREE.Group>(null);
   const intro = useRef({ t: 0, rot: 0.35 });
@@ -145,8 +152,11 @@ function TireModel({
   }, [tread]);
 
   useEffect(() => {
-    gsap.to(intro.current, { t: 1, duration: 2.4, ease: "power3.out" });
-    return () => sidewall.dispose();
+    const tween = gsap.to(intro.current, { t: 1, duration: 0.9, ease: "power2.out" });
+    return () => {
+      tween.kill();
+      sidewall.dispose();
+    };
   }, [sidewall]);
 
   /* classify a local hit point into a component region (tire axis = Z) */
@@ -158,23 +168,34 @@ function TireModel({
     return az > 0.3 ? "shoulder" : "tread";
   };
 
-  const onMove = (e: any) => {
+  const inspect = (e: ThreeEvent<PointerEvent>, partOverride?: PartKey) => {
     e.stopPropagation();
     const local = group.current
       ? group.current.worldToLocal(e.point.clone())
       : e.point;
-    const part = classify(local);
-    setHovered(part);
+    const part =
+      partOverride === "tread"
+        ? Math.abs(local.z) > 0.32
+          ? "shoulder"
+          : "tread"
+        : partOverride ??
+          (Math.hypot(local.x, local.y) > 1.16 && Math.abs(local.z) > 0.32
+            ? "shoulder"
+            : classify(local));
+    if (!part) return;
+    setHovered({
+      part,
+      point: e.point.clone(),
+      pointer: [e.pointer.x, e.pointer.y],
+    });
   };
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (group.current) {
-      /* entrance settles into a fixed pose, then only ±1° breathing */
-      const i = intro.current.t;
-      group.current.rotation.y = 0.35 * (1 - i) + Math.sin(t * 0.22) * 0.02;
-      group.current.rotation.x = Math.sin(t * 0.15) * 0.008;
-      group.current.position.y = Math.sin(t * 0.5) * 0.02; // extremely subtle
+      const entrance = (1 - intro.current.t) * 0.018;
+      group.current.rotation.y = intro.current.rot + entrance + Math.sin(t * 0.18) * 0.002;
+      group.current.rotation.x = Math.sin(t * 0.12) * 0.002;
     }
   });
 
@@ -183,9 +204,12 @@ function TireModel({
   );
 
   return (
-    <group ref={group} rotation={[0, 0.35, 0]}>
+    <group ref={group} rotation={[0, 0.78, 0]}>
       {/* raycast catcher = the visible tire surfaces */}
-      <mesh onPointerMove={onMove} onPointerOut={() => setHovered(null)}>
+      <mesh
+        onPointerMove={(e) => inspect(e)}
+        onPointerDown={(e) => inspect(e)}
+      >
         <torusGeometry args={[1, 0.42, 64, 128]} />
         {rubber}
       </mesh>
@@ -193,8 +217,8 @@ function TireModel({
       <instancedMesh
         ref={instRef}
         args={[tread.geo, undefined, 72]}
-        onPointerMove={onMove}
-        onPointerOut={() => setHovered(null)}
+        onPointerMove={(e) => inspect(e, "tread")}
+        onPointerDown={(e) => inspect(e, "tread")}
       >
         <meshStandardMaterial
           color="#232323"
@@ -223,8 +247,8 @@ function TireModel({
           key={z}
           position={[0, 0, z]}
           rotation={[0, z < 0 ? Math.PI : 0, 0]}
-          onPointerMove={onMove}
-          onPointerOut={() => setHovered(null)}
+          onPointerMove={(e) => inspect(e, "sidewall")}
+          onPointerDown={(e) => inspect(e, "sidewall")}
         >
           <ringGeometry args={[0.74, 1.18, 96]} />
           <meshStandardMaterial
@@ -242,8 +266,8 @@ function TireModel({
 
       {/* rim assembly */}
       <group
-        onPointerMove={onMove}
-        onPointerOut={() => setHovered(null)}
+        onPointerMove={(e) => inspect(e, "rim")}
+        onPointerDown={(e) => inspect(e, "rim")}
       >
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.62, 0.62, 0.32, 48]} />
@@ -350,85 +374,80 @@ function CameraRig({
   hovered,
   setPanel,
 }: {
-  hovered: RefObject<PartKey | null>;
+  hovered: RefObject<InspectionTarget | null>;
   setPanel: (p: PartKey | null) => void;
 }) {
-  const { camera, controls } = useThree() as any;
+  const { camera } = useThree();
   const tween = useRef<gsap.core.Timeline | null>(null);
   const current = useRef<PartKey | null>(null);
+  const focus = useRef(HOME_TARGET.clone());
 
   useFrame(() => {
-    const part = hovered.current;
+    const target = hovered.current;
+    const part = target?.part ?? null;
     if (part === current.current) return;
     current.current = part;
     setPanel(part);
 
     tween.current?.kill();
-    const cam = camera as THREE.PerspectiveCamera;
-    if (part) {
-      /* zoom toward the component anchor — ~1.35x closer */
-      const anchor = new THREE.Vector3(...PART_INFO[part].anchor);
-      const dir = anchor.clone().normalize();
-      const dest = dir.multiplyScalar(2.35).add(new THREE.Vector3(0, 0.35, 0.6));
-      tween.current = gsap.timeline().to(cam.position, {
-        x: dest.x,
-        y: dest.y,
-        z: dest.z,
-        duration: 1.1,
+    if (part && target) {
+      const anchor = target.point;
+      const viewDirection = HOME_POS.clone().sub(anchor).normalize();
+      const homeDistance = HOME_POS.distanceTo(anchor);
+      const zoomDistance = Math.max(2.5, homeDistance / 1.35);
+      const destination = anchor.clone().addScaledVector(viewDirection, zoomDistance);
+      tween.current = gsap.timeline().to(camera.position, {
+        x: destination.x,
+        y: destination.y,
+        z: destination.z,
+        duration: 0.85,
         ease: "power3.inOut",
-      });
-      if (controls) {
-        tween.current
-          .to(controls.target, {
-            x: anchor.x * 0.4,
-            y: anchor.y * 0.4,
-            z: anchor.z * 0.4,
-            duration: 1.1,
-            ease: "power3.inOut",
-          }, 0);
-      }
+      }).to(focus.current, {
+        x: anchor.x,
+        y: anchor.y,
+        z: anchor.z,
+        duration: 0.85,
+        ease: "power3.inOut",
+      }, 0);
     } else {
-      tween.current = gsap.timeline().to(cam.position, {
+      tween.current = gsap.timeline().to(camera.position, {
         x: HOME_POS.x,
         y: HOME_POS.y,
         z: HOME_POS.z,
-        duration: 1.2,
+        duration: 0.9,
         ease: "power3.inOut",
-      });
-      if (controls) {
-        tween.current.to(controls.target, {
-          x: 0, y: 0, z: 0,
-          duration: 1.2,
-          ease: "power3.inOut",
-        }, 0);
-      }
+      }).to(focus.current, {
+        x: HOME_TARGET.x,
+        y: HOME_TARGET.y,
+        z: HOME_TARGET.z,
+        duration: 0.9,
+        ease: "power3.inOut",
+      }, 0);
     }
   });
+  useFrame(() => camera.lookAt(focus.current));
+  useEffect(() => () => {
+    tween.current?.kill();
+  }, []);
   return null;
 }
 
-/* ------------------------------------------------------------------ */
-/* Studio sweep light — soft changes across the rubber surface          */
-/* ------------------------------------------------------------------ */
-function SweepLight() {
-  const ref = useRef<THREE.SpotLight>(null);
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-    if (ref.current) {
-      ref.current.position.x = Math.sin(t * 0.25) * 4;
-      ref.current.position.z = 3.5 + Math.cos(t * 0.25) * 2;
+function PointerLeaveRig({
+  hovered,
+  clearHovered,
+}: {
+  hovered: RefObject<InspectionTarget | null>;
+  clearHovered: () => void;
+}) {
+  const { pointer } = useThree();
+  useFrame(() => {
+    const target = hovered.current;
+    if (!target) return;
+    if (Math.hypot(pointer.x - target.pointer[0], pointer.y - target.pointer[1]) > 0.06) {
+      clearHovered();
     }
   });
-  return (
-    <spotLight
-      ref={ref}
-      position={[0, 4, 3]}
-      angle={0.45}
-      penumbra={0.9}
-      intensity={110}
-      color="#ffffff"
-    />
-  );
+  return null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -436,15 +455,17 @@ function SweepLight() {
 /* ------------------------------------------------------------------ */
 function PartLabel({
   part,
+  position,
   onLeave,
 }: {
   part: PartKey | null;
+  position: [number, number, number] | null;
   onLeave: () => void;
 }) {
-  if (!part) return null;
+  if (!part || !position) return null;
   const info = PART_INFO[part];
   return (
-    <Html position={info.anchor} center distanceFactor={7} zIndexRange={[20, 0]}>
+    <Html position={position} center distanceFactor={7} zIndexRange={[20, 0]}>
       <div
         className="part-label"
         onMouseLeave={onLeave}
@@ -491,65 +512,60 @@ export default function TireScene({
 }: {
   onHover: (p: PartKey | null) => void;
 }) {
-  const hovered = useRef<PartKey | null>(null);
+  const hovered = useRef<InspectionTarget | null>(null);
   const [labelPart, setLabelPart] = useState<PartKey | null>(null);
+  const [labelPosition, setLabelPosition] = useState<[number, number, number] | null>(null);
+  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const setHovered = (p: PartKey | null) => {
-    hovered.current = p;
-    setLabelPart(p);
+  const setHovered = (target: InspectionTarget) => {
+    if (clearTimer.current) clearTimeout(clearTimer.current);
+    hovered.current = target;
+    if (labelPart !== target.part) {
+      setLabelPart(target.part);
+      setLabelPosition([target.point.x, target.point.y, target.point.z]);
+    }
   };
+  const clearHovered = () => {
+    if (clearTimer.current) clearTimeout(clearTimer.current);
+    hovered.current = null;
+    clearTimer.current = setTimeout(() => {
+      setLabelPart(null);
+      setLabelPosition(null);
+      clearTimer.current = null;
+    }, 90);
+  };
+
+  useEffect(() => () => {
+    if (clearTimer.current) clearTimeout(clearTimer.current);
+  }, []);
 
   return (
     <Canvas
       dpr={[1, 1.75]}
-      camera={{ fov: 40, position: [0, 0.55, 10] }}
+      camera={{ fov: 40, position: [HOME_POS.x, HOME_POS.y, HOME_POS.z] }}
       gl={{ antialias: true, alpha: true }}
+      style={{ touchAction: "pan-y" }}
+      onPointerMissed={clearHovered}
+      onPointerLeave={clearHovered}
     >
-      {/* cinematic entrance: slow dolly into the display position */}
-      <EntranceRig />
-
       {/* studio lighting */}
       <ambientLight intensity={0.25} />
       <spotLight position={[6, 7, 6]} angle={0.5} penumbra={0.8} intensity={140} color="#ffffff" />
       <spotLight position={[-7, 3, -5]} angle={0.6} penumbra={1} intensity={90} color="#9fb6ff" />
       <pointLight position={[0, -3, 3]} intensity={22} color="#ff7a1a" />
-      <SweepLight />
+      <spotLight position={[0, 4, 3]} angle={0.45} penumbra={0.9} intensity={110} color="#ffffff" />
 
-      <TireModel hovered={labelPart} setHovered={setHovered} />
+      <TireModel hovered={labelPart} setHovered={setHovered} clearHovered={clearHovered} />
 
-      <PartLabel part={labelPart} onLeave={() => setHovered(null)} />
-
-      <ContactShadows position={[0, -1.85, 0]} opacity={0.75} scale={12} blur={2.6} far={4} />
-
-      <OrbitControls
-        makeDefault
-        enablePan={false}
-        enableDamping
-        dampingFactor={0.06}
-        rotateSpeed={0.5}
-        minDistance={2.4}
-        maxDistance={8}
-        minPolarAngle={Math.PI / 3.2}
-        maxPolarAngle={Math.PI / 1.8}
-        target={[0, 0, 0]}
+      <PartLabel
+        part={labelPart}
+        position={labelPosition}
+        onLeave={clearHovered}
       />
 
+      <ContactShadows position={[0, -1.85, 0]} opacity={0.75} scale={12} blur={2.6} far={4} />
+      <PointerLeaveRig hovered={hovered} clearHovered={clearHovered} />
       <CameraRig hovered={hovered} setPanel={onHover} />
     </Canvas>
   );
-}
-
-function EntranceRig() {
-  const { camera } = useThree();
-  useEffect(() => {
-    camera.position.set(0, 0.55, 10);
-    gsap.to(camera.position, {
-      x: HOME_POS.x,
-      y: HOME_POS.y,
-      z: HOME_POS.z,
-      duration: 2.2,
-      ease: "power3.inOut",
-    });
-  }, [camera]);
-  return null;
 }
