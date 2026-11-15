@@ -153,23 +153,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TIRE LINES — Our product lineup */}
-      <section className="sec">
-        <div className="wrap">
-          <div className="sec-head">
-            <span className="eyebrow">Our product lineup</span>
-            <h2>Built for forklifts, skid steers and port machines</h2>
+      {/* PRODUCT LINEUP — dark showcase, orange card + tire stack */}
+      <section className="showcase">
+        <span className="showcase-ghost" aria-hidden>ROVINCE<br />ROVINCE</span>
+        <div className="wrap showcase-grid">
+          <div className="showcase-copy">
+            <span className="showcase-tags" aria-hidden>
+              <i className="tag-dash" /><i className="tag-heart">♡</i><i>◎</i><i>◇</i>
+            </span>
+            <span className="showcase-hl" aria-hidden />
+            <h2>The right tire,<br />for every machine<br />that works hard.</h2>
+            <div className="showcase-contact">
+              <Link href="/" className="showcase-logo">
+                RO<br />VINCE
+              </Link>
+              <span className="showcase-phone">
+                <i aria-hidden>—</i> +1 (310) 635-4400 <em className="confirm-tag">[confirm]</em>
+              </span>
+            </div>
           </div>
-          <div className="line-cards">
+          <div className="showcase-stage">
+            <div className="showcase-card" aria-hidden />
+            {FAMILIES.map((f, i) => (
+              <Link key={f.slug} href={`/tires/${f.slug}`} className={`showcase-tire st-${i}`} title={f.title}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={familyTire(f.family)} alt={f.title} loading="lazy" />
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div className="wrap">
+          <div className="showcase-links">
             {FAMILIES.map((f) => (
-              <Link key={f.slug} href={`/tires/${f.slug}`} className="line-card line-card-img">
-                <span className="line-card-pic">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={familyTire(f.family)} alt={f.title} loading="lazy" />
-                </span>
-                <h3>{f.title}</h3>
-                <p>{f.blurb}</p>
-                <span className="line-card-go">See sizes →</span>
+              <Link key={f.slug} href={`/tires/${f.slug}`} className="showcase-link">
+                <span>{f.title}</span>
+                <em>See sizes →</em>
               </Link>
             ))}
           </div>
