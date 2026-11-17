@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SIZES, sizeHref, fmt, type TireSize } from "@/data/sizes";
 import { useQuote } from "@/lib/quote";
 import { MACHINE_PHOTO } from "@/lib/media";
+import ImageCarousel from "@/components/ImageCarousel";
 
 const MACHINES = [
   { id: "forklift", label: "Forklift" },
@@ -58,17 +59,28 @@ export default function MachineFinder() {
       {/* Step 1 */}
       <div className="mf-step">
         <div className="mf-step-h"><span className="mf-stepno">Step 1 of 3</span> What machine?</div>
-        <div className="mf-machines">
-          {MACHINES.map((m) => (
-            <button key={m.id} className={"mf-mcard" + (machine === m.id ? " on" : "")} onClick={() => { setMachine(m.id); }}>
-              <span className="mf-pic">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={MACHINE_PHOTO[m.id]} alt={m.label} loading="lazy" />
-              </span>
-              <span className="mf-mlabel">{m.label}</span>
-            </button>
-          ))}
-        </div>
+        <ImageCarousel
+          cards={MACHINES.map((item) => ({
+            id: item.id,
+            label: item.label,
+            image: MACHINE_PHOTO[item.id],
+          }))}
+          className="mf-machines"
+          initialIndex={machine ? MACHINES.findIndex((item) => item.id === machine) : 0}
+          onCardChange={(index) => setMachine(MACHINES[index]?.id ?? null)}
+          maxRotationDegrees={28}
+          maxDepthPx={140}
+          minScale={0.92}
+          cardGap={28}
+          frictionFactor={0.9}
+          wheelSensitivity={0.6}
+          dragSensitivity={1}
+          backgroundBlur={24}
+          gradientSize={0.65}
+          gradientIntensity={0.7}
+          enableKeyboard
+          cardAspectRatio={0.8}
+        />
       </div>
 
       {machine && (
