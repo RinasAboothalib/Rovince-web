@@ -310,24 +310,37 @@ h1,h2{text-transform:uppercase}
    MACHINE FINDER + QUOTE PAGE
 =================================================================== */
 .machine-finder{display:flex;flex-direction:column;gap:26px;max-width:760px}
-.mf-step{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:22px}
+.mf-step{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:22px;
+  animation:mfStepSwipe .62s var(--ease) both}
 .mf-step-h{font-family:var(--font-head);font-weight:700;font-size:1.15rem;margin-bottom:14px}
 .mf-stepno{display:inline-block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:8px}
-.mf-machines{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mf-machines{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;perspective:900px}
 .mf-mcard{display:flex;flex-direction:column;text-align:left;background:var(--bg-3);border:1px solid var(--line);
   border-radius:12px;overflow:hidden;color:var(--fg);font-size:.9rem;font-weight:600;cursor:pointer;
   position:relative;isolation:isolate;box-shadow:0 0 0 rgba(0,0,0,0);
+  transform-origin:center bottom;will-change:transform,opacity;
   transition:border-color .35s var(--ease),transform .55s var(--ease),box-shadow .55s var(--ease),
-    background .35s var(--ease);animation:mfCardEnter .72s var(--ease) both}
-.mf-mcard:nth-child(2){animation-delay:.07s}.mf-mcard:nth-child(3){animation-delay:.14s}
-.mf-mcard:nth-child(4){animation-delay:.21s}.mf-mcard:nth-child(5){animation-delay:.28s}.mf-mcard:nth-child(6){animation-delay:.35s}
+    background .35s var(--ease),filter .45s var(--ease);animation:mfCardSwipeLeft .78s var(--ease) both}
+.mf-mcard:nth-child(1),.mf-mcard:nth-child(4){--swipe-x:-72px;--swipe-ry:11deg;transform-origin:right bottom}
+.mf-mcard:nth-child(3),.mf-mcard:nth-child(6){--swipe-x:72px;--swipe-ry:-11deg;transform-origin:left bottom}
+.mf-mcard:nth-child(2),.mf-mcard:nth-child(5){--swipe-x:0px;--swipe-ry:0deg}
+.mf-mcard:nth-child(2){animation-name:mfCardSwipeUp;animation-delay:.07s}
+.mf-mcard:nth-child(3){animation-name:mfCardSwipeRight;animation-delay:.14s}
+.mf-mcard:nth-child(4){animation-delay:.21s}.mf-mcard:nth-child(5){animation-name:mfCardSwipeUp;animation-delay:.28s}
+.mf-mcard:nth-child(6){animation-name:mfCardSwipeRight;animation-delay:.35s}
 .mf-mcard::after{content:"";position:absolute;inset:-40% -70%;z-index:1;pointer-events:none;
   background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.12) 50%,transparent 58%);
   transform:translateX(-70%) rotate(8deg);transition:transform .85s var(--ease)}
-.mf-mcard:hover{border-color:rgba(255,255,255,.38);transform:translateY(-6px) scale(1.012);
+.mf-mcard:hover{border-color:rgba(255,255,255,.38);transform:translateY(-8px) scale(1.018) rotateY(var(--swipe-ry));
   box-shadow:0 18px 38px -24px rgba(0,0,0,.95);background:#242424}
 .mf-mcard:hover::after{transform:translateX(70%) rotate(8deg)}
-.mf-mcard.on{border-color:var(--fg);box-shadow:0 0 0 1px rgba(255,255,255,.32),0 20px 40px -28px rgba(0,0,0,.9)}
+.mf-mcard.on{border-color:var(--fg);z-index:3;transform:translateY(-5px) scale(1.025);
+  box-shadow:0 0 0 1px rgba(255,255,255,.32),0 24px 46px -26px rgba(0,0,0,.96)}
+.mf-machines:has(.mf-mcard.on) .mf-mcard:not(.on){filter:saturate(.72) brightness(.76)}
+.mf-machines:has(.mf-mcard.on) .mf-mcard:nth-child(1):not(.on),
+.mf-machines:has(.mf-mcard.on) .mf-mcard:nth-child(4):not(.on){transform:translateX(-7px) rotateY(4deg)}
+.mf-machines:has(.mf-mcard.on) .mf-mcard:nth-child(3):not(.on),
+.mf-machines:has(.mf-mcard.on) .mf-mcard:nth-child(6):not(.on){transform:translateX(7px) rotateY(-4deg)}
 .mf-mcard.on::after{transform:translateX(42%) rotate(8deg);animation:mfSelectedSheen 3.8s ease-in-out infinite}
 .mf-pic{display:block;aspect-ratio:16/10;overflow:hidden;background:var(--bg);position:relative}
 .mf-pic::after{content:"";position:absolute;inset:0;pointer-events:none;
@@ -338,8 +351,13 @@ h1,h2{text-transform:uppercase}
 .mf-mlabel{padding:12px 14px;position:relative;z-index:2}
 .mf-mcard.on .mf-mlabel::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;
   border-radius:50%;background:var(--fg);transform:translateY(-50%);box-shadow:0 0 12px rgba(255,255,255,.55)}
-@keyframes mfCardEnter{from{opacity:0;transform:translateY(22px) scale(.965)}to{opacity:1;transform:none}}
+@keyframes mfCardSwipeLeft{from{opacity:0;transform:translateX(var(--swipe-x)) translateY(18px) scale(.94) rotateY(var(--swipe-ry))}
+  to{opacity:1;transform:translateX(0) translateY(0) scale(1) rotateY(0)}}
+@keyframes mfCardSwipeRight{from{opacity:0;transform:translateX(var(--swipe-x)) translateY(18px) scale(.94) rotateY(var(--swipe-ry))}
+  to{opacity:1;transform:translateX(0) translateY(0) scale(1) rotateY(0)}}
+@keyframes mfCardSwipeUp{from{opacity:0;transform:translateY(38px) scale(.94)}to{opacity:1;transform:none}}
 @keyframes mfSelectedSheen{0%,72%,100%{transform:translateX(-70%) rotate(8deg)}88%{transform:translateX(70%) rotate(8deg)}}
+@keyframes mfStepSwipe{from{opacity:0;transform:translateX(42px) rotateY(-4deg)}to{opacity:1;transform:none}}
 .mf-machine-photo{position:relative;border-radius:12px;overflow:hidden;margin-bottom:14px;border:1px solid var(--line)}
 .mf-machine-photo img{width:100%;height:220px;object-fit:cover;filter:brightness(.8)}
 .mf-wheel-dot{position:absolute;left:14px;bottom:12px;font-size:.8rem;background:rgba(13,13,13,.72);border:1px solid var(--line-2);
