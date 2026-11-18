@@ -68,16 +68,16 @@ export default function MachineFinder() {
           className="mf-machines"
           initialIndex={machine ? MACHINES.findIndex((item) => item.id === machine) : 0}
           onCardChange={(index) => setMachine(MACHINES[index]?.id ?? null)}
-          maxRotationDegrees={28}
-          maxDepthPx={140}
-          minScale={0.92}
-          cardGap={28}
+          maxRotationDegrees={12}
+          maxDepthPx={70}
+          minScale={0.82}
+          cardGap={18}
           frictionFactor={0.9}
           wheelSensitivity={0.6}
           dragSensitivity={1}
-          backgroundBlur={24}
-          gradientSize={0.65}
-          gradientIntensity={0.7}
+          backgroundBlur={34}
+          gradientSize={0.78}
+          gradientIntensity={0.24}
           enableKeyboard
           cardAspectRatio={0.8}
         />

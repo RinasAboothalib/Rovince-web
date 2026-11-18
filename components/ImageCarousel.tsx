@@ -36,18 +36,18 @@ type ImageCarouselProps = {
 };
 
 const FALLBACK_COLORS = [
-  ["#5e7c91", "#1a2a38"],
-  ["#617b91", "#252d33"],
-  ["#7997a4", "#26343b"],
-  ["#71859a", "#2a3542"],
-  ["#86a4af", "#27373d"],
-  ["#6d7f8b", "#242e35"],
+  ["#8d7463", "#302923"],
+  ["#756658", "#2d2925"],
+  ["#91806f", "#332d28"],
+  ["#7c6b5d", "#302a26"],
+  ["#9a8775", "#37302a"],
+  ["#806f62", "#2b2825"],
 ];
 
 const wrapIndex = (index: number, length: number) =>
   ((Math.round(index) % length) + length) % length;
 const getCardWidth = (viewportWidth: number) => {
-  if (viewportWidth < 620) return 240;
+  if (viewportWidth < 620) return Math.round(viewportWidth * 0.78);
   return Math.min(520, Math.max(300, viewportWidth * 0.38));
 };
 
@@ -77,6 +77,14 @@ export default function ImageCarousel({
   const [position, setPosition] = useState(initialIndex);
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [colors, setColors] = useState<Record<number, [string, string]>>({});
+  const [viewportWidth, setViewportWidth] = useState(900);
+
+  useEffect(() => {
+    const updateWidth = () => setViewportWidth(viewportRef.current?.clientWidth ?? window.innerWidth);
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   const activeCard = useMemo(
     () => wrapIndex(activeIndex, cards.length),
@@ -144,7 +152,7 @@ export default function ImageCarousel({
         if (Math.abs(nearest - next) < 0.002) {
           const finalIndex = wrapIndex(nearest, cards.length);
           setActiveIndex((old) => {
-            if (old !== finalIndex) onCardChange?.(finalIndex);
+            onCardChange?.(finalIndex);
             return finalIndex;
           });
           return nearest;
@@ -161,10 +169,8 @@ export default function ImageCarousel({
     if (frame.current) cancelAnimationFrame(frame.current);
     setPosition(index);
     const nextIndex = wrapIndex(index, cards.length);
-    setActiveIndex((old) => {
-      if (old !== nextIndex) onCardChange?.(nextIndex);
-      return nextIndex;
-    });
+    setActiveIndex(nextIndex);
+    onCardChange?.(nextIndex);
   }, [cards.length, onCardChange]);
 
   useEffect(() => {
@@ -229,7 +235,7 @@ export default function ImageCarousel({
         "--carousel-secondary": secondary,
         "--carousel-intensity": gradientIntensity,
         "--carousel-gap": `${cardGap}px`,
-        "--carousel-card-width": `${getCardWidth(viewportRef.current?.clientWidth ?? 900)}px`,
+        "--carousel-card-width": `${getCardWidth(viewportWidth)}px`,
       } as React.CSSProperties}
       ref={viewportRef}
       role="region"
@@ -252,7 +258,7 @@ export default function ImageCarousel({
           const depth = Math.min(distance * maxDepthPx, maxDepthPx);
           const scale = Math.max(minScale, 1 - distance * (1 - minScale));
           const rotation = Math.max(-maxRotationDegrees, Math.min(maxRotationDegrees, -delta * maxRotationDegrees));
-          const cardWidth = getCardWidth(viewportRef.current?.clientWidth ?? 900);
+          const cardWidth = getCardWidth(viewportWidth);
           const x = delta * (cardWidth + cardGap);
           const zIndex = 100 - Math.round(distance * 10);
           const isActive = wrapIndex(index, cards.length) === activeCard;

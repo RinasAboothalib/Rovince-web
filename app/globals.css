@@ -310,40 +310,37 @@ h1,h2{text-transform:uppercase}
    MACHINE FINDER + QUOTE PAGE
 =================================================================== */
 .machine-finder{display:flex;flex-direction:column;gap:26px;width:100%;max-width:none}
-.mf-step{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:22px;
+.mf-step{border:0;border-radius:0;background:transparent;padding:0;overflow:hidden;
   animation:mfStepSwipe .62s var(--ease) both}
-.mf-step-h{font-family:var(--font-head);font-weight:700;font-size:1.15rem;margin-bottom:14px}
+.mf-step-h{font-family:var(--font-head);font-weight:700;font-size:1.15rem;margin-bottom:20px;padding-inline:max(22px,env(safe-area-inset-left))}
 .mf-stepno{display:inline-block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:8px}
-.mf-machines{position:relative;width:100%;height:min(68vh,620px);overflow:hidden;perspective:900px;
-  border-radius:12px;touch-action:pan-y;cursor:grab}
+.mf-machines{position:relative;width:100vw;height:min(64vh,580px);margin-left:calc(50% - 50vw);overflow:hidden;perspective:1100px;
+  border-radius:0;touch-action:pan-y;cursor:grab}
 .mf-machines:active{cursor:grabbing}
-.image-carousel-gradient{position:absolute;inset:-20%;z-index:-1;pointer-events:none;filter:blur(var(--carousel-blur));
+.image-carousel-gradient{position:absolute;inset:0;z-index:-1;pointer-events:none;filter:blur(var(--carousel-blur));
   background:
-    radial-gradient(circle at 20% 44%,color-mix(in srgb,var(--carousel-primary) calc(var(--carousel-intensity)*100%),transparent) 0,var(--carousel-gradient-size),transparent 58%),
-    radial-gradient(circle at 78% 58%,color-mix(in srgb,var(--carousel-secondary) calc(var(--carousel-intensity)*100%),transparent) 0,var(--carousel-gradient-size),transparent 62%),
-    linear-gradient(135deg,var(--surface),var(--bg-3));
-  opacity:.78;transform:scale(1.08);transition:background .7s var(--ease),opacity .7s var(--ease)}
+    radial-gradient(circle at 50% 48%,color-mix(in srgb,var(--carousel-primary) calc(var(--carousel-intensity)*100%),transparent) 0,var(--carousel-gradient-size),transparent 58%),
+    radial-gradient(circle at 78% 58%,color-mix(in srgb,var(--carousel-secondary) calc(var(--carousel-intensity)*100%),transparent) 0,var(--carousel-gradient-size),transparent 68%),
+    linear-gradient(135deg,#171512,#0f0f0e 72%);
+  opacity:.9;transform:scale(1.02);transition:background .7s var(--ease),opacity .7s var(--ease)}
 .image-carousel-track{position:absolute;inset:0;transform-style:preserve-3d}
 .image-carousel-card{position:absolute;left:50%;top:50%;width:var(--carousel-card-width);height:calc(var(--carousel-card-width) / var(--card-aspect));
-  margin:0;padding:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--bg-3);
+  margin:0;padding:0;border:0;border-radius:34px;overflow:hidden;background:#171717;
   color:var(--fg);text-align:left;cursor:pointer;transform-style:preserve-3d;
   transform:translate(-50%,-50%) translate3d(var(--card-x),0,var(--card-depth)) rotateY(var(--card-rotation)) scale(var(--card-scale));
-  transition:transform .62s var(--ease),border-color .35s var(--ease),filter .35s var(--ease),opacity .35s var(--ease);
-  will-change:transform;box-shadow:0 28px 50px -32px rgba(0,0,0,.96)}
-.image-carousel-card:not(.active){opacity:.72;filter:saturate(.72) brightness(.78)}
-.image-carousel-card.active{border-color:rgba(255,255,255,.78);opacity:1;filter:none;
-  box-shadow:0 30px 55px -28px rgba(0,0,0,.98),0 0 0 1px rgba(255,255,255,.12)}
-.image-carousel-card::after{content:"";position:absolute;inset:-40% -70%;z-index:2;pointer-events:none;
-  background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.16) 50%,transparent 58%);
-  transform:translateX(-70%) rotate(8deg);transition:transform .9s var(--ease)}
-.image-carousel-card.active::after{animation:carouselSheen 4s ease-in-out infinite}
-.image-carousel-image{display:block;width:100%;height:calc(100% - 52px);overflow:hidden}
-.image-carousel-image img{width:100%;height:100%;object-fit:contain;object-position:center;filter:saturate(.82) brightness(.86);
-  pointer-events:none;user-select:none;transition:transform .8s var(--ease),filter .4s var(--ease)}
-.image-carousel-card.active .image-carousel-image img{filter:saturate(1) brightness(.96);transform:scale(1.035)}
-.image-carousel-label{display:flex;align-items:center;height:52px;padding:0 16px;font-family:var(--font-head);
-  font-size:1rem;font-weight:700}
-.image-carousel-dots{position:absolute;z-index:500;left:50%;bottom:8px;display:flex;gap:7px;transform:translateX(-50%)}
+  transition:transform .72s var(--ease),filter .55s var(--ease),opacity .55s var(--ease);
+  will-change:transform;box-shadow:none}
+.image-carousel-card:not(.active){opacity:.64;filter:saturate(.78) brightness(.82)}
+.image-carousel-card.active{border:0;opacity:1;filter:none;box-shadow:0 26px 55px -32px rgba(0,0,0,.9)}
+.image-carousel-card::after{display:none}
+.image-carousel-image{display:block;width:100%;height:100%;overflow:hidden}
+.image-carousel-image img{width:100%;height:100%;object-fit:cover;object-position:center;filter:none;
+  pointer-events:none;user-select:none;transition:transform .8s var(--ease)}
+.image-carousel-card.active .image-carousel-image img{transform:scale(1.015)}
+.image-carousel-label{position:absolute;left:18px;bottom:16px;z-index:3;display:inline-flex;align-items:center;height:38px;
+  padding:0 12px;border-radius:999px;background:rgba(13,13,13,.72);backdrop-filter:blur(8px);font-family:var(--font-head);
+  font-size:.88rem;font-weight:700}
+.image-carousel-dots{position:absolute;z-index:500;left:50%;bottom:-2px;display:flex;gap:8px;transform:translateX(-50%)}
 .image-carousel-dots button{width:7px;height:7px;padding:0;border:0;border-radius:999px;background:rgba(255,255,255,.28);
   cursor:pointer;transition:.3s var(--ease)}
 .image-carousel-dots button.active{width:22px;background:var(--fg)}
@@ -370,9 +367,8 @@ h1,h2{text-transform:uppercase}
 .mf-load{flex:1;color:var(--muted);font-size:.86rem}
 @media(max-width:620px){
   .mf-machines{height:330px}
-  .image-carousel-card{width:240px;height:calc(240px / var(--card-aspect))}
-  .image-carousel-label{height:46px;padding-inline:13px}
-  .image-carousel-image{height:calc(100% - 46px)}
+  .image-carousel-card{border-radius:28px}
+  .image-carousel-label{left:12px;bottom:12px;height:34px;font-size:.8rem}
 }
 
 /* quote page */
