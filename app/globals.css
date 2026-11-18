@@ -772,9 +772,9 @@ form.card{padding:34px}
 .showcase .home-no-size p{color:#cfcfcf}
 
 /* pinned horizontal scroller — page holds while the row slides */
-.pin-scroll{position:relative;background:#0b0b0b;border-block:1px solid var(--line)}
+.pin-scroll{position:relative;background:transparent;border:0}
 .pin-stage{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden;
-  background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);background-size:5px 5px;color:#fff}
+  background:transparent;color:#fff}
 .pin-head{margin-bottom:34px}
 .pin-head h2{font-size:clamp(1.4rem,3vw,2.2rem)}
 .pin-track{display:flex;gap:26px;width:max-content;padding:0 max(22px,env(safe-area-inset-left));will-change:transform}

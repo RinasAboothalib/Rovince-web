@@ -41,9 +41,13 @@ export default function MachineScroller() {
 
     size();
     onScroll();
+    const onResize = () => { size(); onScroll(); };
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", () => { size(); onScroll(); });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    };
   }, []);
 
   return (
