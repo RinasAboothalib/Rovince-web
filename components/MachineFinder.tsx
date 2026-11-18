@@ -3,8 +3,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { SIZES, sizeHref, fmt, type TireSize } from "@/data/sizes";
 import { useQuote } from "@/lib/quote";
-import { MACHINE_PHOTO } from "@/lib/media";
-import ImageCarousel from "@/components/ImageCarousel";
 
 const MACHINES = [
   { id: "forklift", label: "Forklift" },
@@ -32,7 +30,7 @@ const get = (id: string) => SIZES.find((s) => s.id === id);
 
 export default function MachineFinder() {
   const { add } = useQuote();
-  const [machine, setMachine] = useState<string | null>(null);
+  const [machine, setMachine] = useState<string | null>("other");
   const [wheel, setWheel] = useState<"front" | "rear">("front");
   const [tread, setTread] = useState<"glide" | "grip" | null>(null);
   const [marking, setMarking] = useState<"black" | "grey">("black");
@@ -56,41 +54,9 @@ export default function MachineFinder() {
 
   return (
     <div className="machine-finder">
-      {/* Step 1 */}
-      <div className="mf-step">
-        <div className="mf-step-h"><span className="mf-stepno">Step 1 of 3</span> What machine?</div>
-        <ImageCarousel
-          cards={MACHINES.map((item) => ({
-            id: item.id,
-            label: item.label,
-            image: MACHINE_PHOTO[item.id],
-          }))}
-          className="mf-machines"
-          initialIndex={machine ? MACHINES.findIndex((item) => item.id === machine) : 0}
-          onCardChange={(index) => setMachine(MACHINES[index]?.id ?? null)}
-          maxRotationDegrees={12}
-          maxDepthPx={70}
-          minScale={0.82}
-          cardGap={18}
-          frictionFactor={0.9}
-          wheelSensitivity={0.6}
-          dragSensitivity={1}
-          backgroundBlur={34}
-          gradientSize={0.78}
-          gradientIntensity={0.24}
-          enableKeyboard
-          cardAspectRatio={0.8}
-        />
-      </div>
-
       {machine && (
         <div className="mf-step">
-          <div className="mf-step-h"><span className="mf-stepno">Step 2 of 3</span> Which wheel?</div>
-          <div className="mf-machine-photo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={MACHINE_PHOTO[machine]} alt={MACHINES.find((m) => m.id === machine)?.label ?? ""} />
-            <span className={"mf-wheel-dot " + wheel}>Tap · {wheel === "front" ? "front load wheel" : "rear steering wheel"}</span>
-          </div>
+          <div className="mf-step-h"><span className="mf-stepno">Step 1 of 2</span> Which wheel?</div>
           <div className="pills">
             <button className={wheel === "front" ? "on" : ""} onClick={() => setWheel("front")}>Front (load)</button>
             <button className={wheel === "rear" ? "on" : ""} onClick={() => setWheel("rear")}>Rear (steering)</button>
@@ -105,7 +71,7 @@ export default function MachineFinder() {
 
       {machine && (
         <div className="mf-step">
-          <div className="mf-step-h"><span className="mf-stepno">Step 3 of 3</span> Glide or grip?</div>
+          <div className="mf-step-h"><span className="mf-stepno">Step 2 of 2</span> Glide or grip?</div>
           <div className="pills">
             <button className={tread === "glide" ? "on" : ""} onClick={() => setTread("glide")}>Glide (smooth / indoor)</button>
             <button className={tread === "grip" ? "on" : ""} onClick={() => setTread("grip")}>Grip (traction / outdoor)</button>

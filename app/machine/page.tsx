@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import MachineFinder from "@/components/MachineFinder";
+import MachineScroller from "@/components/MachineScroller";
 
 export const metadata: Metadata = {
   title: "Pick Your Machine — Find the Right Tire Size",
@@ -10,18 +11,21 @@ export const metadata: Metadata = {
 
 export default function MachinePage() {
   return (
-    <section className="sec" style={{ paddingTop: 120 }}>
-      <div className="wrap">
-        <div className="sec-head">
-          <span className="eyebrow">No size? Start here</span>
-          <h2>Pick your machine</h2>
-          <p className="lead">
-            Three quick questions — machine, wheel, and glide or grip — and we&apos;ll show the sizes that
-            usually fit. Check the number on your tire, then add it to a quote.
-          </p>
+    <>
+      <section className="sec" style={{ paddingTop: 120 }}>
+        <div className="wrap">
+          <div className="sec-head">
+            <span className="eyebrow">No size? Start here</span>
+            <h2>Pick your machine</h2>
+            <p className="lead">
+              Three quick questions — machine, wheel, and glide or grip — and we&apos;ll show the sizes that
+              usually fit. Check the number on your tire, then add it to a quote.
+            </p>
+          </div>
+          <MachineScroller />
+          <MachineFinder />
         </div>
-        <MachineFinder />
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
