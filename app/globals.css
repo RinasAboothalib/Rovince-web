@@ -309,12 +309,12 @@ h1,h2{text-transform:uppercase}
 /* ===================================================================
    MACHINE FINDER + QUOTE PAGE
 =================================================================== */
-.machine-finder{display:flex;flex-direction:column;gap:26px;max-width:760px}
+.machine-finder{display:flex;flex-direction:column;gap:26px;width:100%;max-width:none}
 .mf-step{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:22px;
   animation:mfStepSwipe .62s var(--ease) both}
 .mf-step-h{font-family:var(--font-head);font-weight:700;font-size:1.15rem;margin-bottom:14px}
 .mf-stepno{display:inline-block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:8px}
-.mf-machines{position:relative;width:100%;height:390px;overflow:hidden;perspective:900px;
+.mf-machines{position:relative;width:100%;height:min(68vh,620px);overflow:hidden;perspective:900px;
   border-radius:12px;touch-action:pan-y;cursor:grab}
 .mf-machines:active{cursor:grabbing}
 .image-carousel-gradient{position:absolute;inset:-20%;z-index:-1;pointer-events:none;filter:blur(var(--carousel-blur));
@@ -324,7 +324,7 @@ h1,h2{text-transform:uppercase}
     linear-gradient(135deg,var(--surface),var(--bg-3));
   opacity:.78;transform:scale(1.08);transition:background .7s var(--ease),opacity .7s var(--ease)}
 .image-carousel-track{position:absolute;inset:0;transform-style:preserve-3d}
-.image-carousel-card{position:absolute;left:50%;top:50%;width:300px;height:calc(300px / var(--card-aspect));
+.image-carousel-card{position:absolute;left:50%;top:50%;width:var(--carousel-card-width);height:calc(var(--carousel-card-width) / var(--card-aspect));
   margin:0;padding:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--bg-3);
   color:var(--fg);text-align:left;cursor:pointer;transform-style:preserve-3d;
   transform:translate(-50%,-50%) translate3d(var(--card-x),0,var(--card-depth)) rotateY(var(--card-rotation)) scale(var(--card-scale));
@@ -338,7 +338,7 @@ h1,h2{text-transform:uppercase}
   transform:translateX(-70%) rotate(8deg);transition:transform .9s var(--ease)}
 .image-carousel-card.active::after{animation:carouselSheen 4s ease-in-out infinite}
 .image-carousel-image{display:block;width:100%;height:calc(100% - 52px);overflow:hidden}
-.image-carousel-image img{width:100%;height:100%;object-fit:cover;filter:saturate(.82) brightness(.86);
+.image-carousel-image img{width:100%;height:100%;object-fit:contain;object-position:center;filter:saturate(.82) brightness(.86);
   pointer-events:none;user-select:none;transition:transform .8s var(--ease),filter .4s var(--ease)}
 .image-carousel-card.active .image-carousel-image img{filter:saturate(1) brightness(.96);transform:scale(1.035)}
 .image-carousel-label{display:flex;align-items:center;height:52px;padding:0 16px;font-family:var(--font-head);

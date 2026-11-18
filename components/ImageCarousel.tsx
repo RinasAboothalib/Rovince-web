@@ -46,6 +46,10 @@ const FALLBACK_COLORS = [
 
 const wrapIndex = (index: number, length: number) =>
   ((Math.round(index) % length) + length) % length;
+const getCardWidth = (viewportWidth: number) => {
+  if (viewportWidth < 620) return 240;
+  return Math.min(520, Math.max(300, viewportWidth * 0.38));
+};
 
 export default function ImageCarousel({
   cards,
@@ -199,7 +203,7 @@ export default function ImageCarousel({
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (dragStart.current === null) return;
     const viewportWidth = viewportRef.current?.clientWidth ?? 900;
-    const cardWidth = Math.min(300, viewportWidth * 0.46);
+    const cardWidth = getCardWidth(viewportWidth);
     const step = cardWidth + cardGap;
     const next = dragPosition.current - ((event.clientX - dragStart.current) / step) * dragSensitivity;
     setPosition(next);
@@ -225,6 +229,7 @@ export default function ImageCarousel({
         "--carousel-secondary": secondary,
         "--carousel-intensity": gradientIntensity,
         "--carousel-gap": `${cardGap}px`,
+        "--carousel-card-width": `${getCardWidth(viewportRef.current?.clientWidth ?? 900)}px`,
       } as React.CSSProperties}
       ref={viewportRef}
       role="region"
@@ -247,7 +252,7 @@ export default function ImageCarousel({
           const depth = Math.min(distance * maxDepthPx, maxDepthPx);
           const scale = Math.max(minScale, 1 - distance * (1 - minScale));
           const rotation = Math.max(-maxRotationDegrees, Math.min(maxRotationDegrees, -delta * maxRotationDegrees));
-          const cardWidth = 300;
+          const cardWidth = getCardWidth(viewportRef.current?.clientWidth ?? 900);
           const x = delta * (cardWidth + cardGap);
           const zIndex = 100 - Math.round(distance * 10);
           const isActive = wrapIndex(index, cards.length) === activeCard;
